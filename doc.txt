@@ -1,0 +1,10 @@
+///endpoints
+
+-home
+-uno que te muestre la tabla hiragana & katakana
+-el de memorizar kana
+-el de prueba de kana
+-crear usuario
+-login
+-el de competir con otra persona - fijarse en football bingo
+
