@@ -1,0 +1,107 @@
+body,
+.kana-practice-container {
+    background: #222;
+    color: #eee;
+    min-height: 100vh;
+}
+
+.kana-main-box {
+    background: #222;
+    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+    margin: 2rem auto 2rem auto;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 6px;
+}
+
+.kana-large {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+}
+
+.kana-input {
+    width: 70%;
+    font-size: 1.3rem;
+    margin-top: 1rem;
+    padding: .6em .8em;
+    border: 1px solid #888;
+    border-radius: 3px;
+    background: #181818;
+    color: #fff;
+    text-align: center;
+}
+
+.tableKana {
+    border-collapse: collapse;
+    margin: 1.5em auto;
+    font-size: 1.15em;
+}
+
+.tableKana th,
+.tableKana td {
+    border: 1px solid #444;
+    padding: 4px 6px;
+    text-align: center;
+    min-width: 32px;
+    background: #222;
+    color: #eee;
+    font-size: 1em;
+}
+
+.tableKana th {
+    background: #333;
+}
+
+.kanacheck {
+    margin-bottom: 4px;
+    transform: scale(1.05);
+    accent-color: #09f;
+}
+
+.kana {
+    font-size: 1.18em;
+}
+
+.romaji {
+    font-size: 0.8em;
+}
+
+.kana-romanji-hover {
+    color: #ededed;
+    font-size: 1.6rem;
+    text-align: center;
+    margin: 0.5em 0 0.5em 0;
+    opacity: 0.85;
+    letter-spacing: 1px;
+}
+
+.kana-message {
+    margin: 1em 0 0.3em 0;
+    min-height: 1.2em;
+    color: #ec7279;
+    font-weight: bold;
+}
+
+.kana-count {
+    margin-bottom: 1em;
+    font-size: 1.1em;
+    color: #c5e478;
+}
+
+.kana-table-title {
+    margin-bottom: 0.6em;
+    text-align: center;
+    font-size: 1.25em;
+}
+
+.kana-table-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2em;
+}
