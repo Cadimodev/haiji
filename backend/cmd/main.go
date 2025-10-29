@@ -87,6 +87,11 @@ func main() {
 		handlers.HandlerUserCreate(&apiCFG, w, r)
 	})
 
+	// DEV endpoints
+	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerReset(&apiCFG, w, r)
+	})
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
