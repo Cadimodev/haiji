@@ -8,3 +8,38 @@
 -login
 -el de competir con otra persona - fijarse en football bingo
 
+////haiji
+│
+├── /backend
+│   ├── /cmd               # Entradas principales (main.go) para servicios
+│   ├── /internal          # Código privado para lógica de negocio, servicios, repositorios
+│   ├── /pkg               # Código exportable para otros servicios (helpers, utils...)
+│   ├── /api               # Definiciones de API (OpenAPI/Swagger si usas)
+│   ├── /migrations        # Migraciones de base de datos PostgreSQL
+│   ├── Dockerfile         # Dockerfile específico para backend
+│   ├── go.mod
+│   ├── go.sum
+│   └── README.md          # Documentación backend
+│
+├── /frontend
+│   ├── /public            # Archivos estáticos públicos (index.html, favicon...)
+│   ├── /src               # Código fuente React (componentes, páginas, servicios)
+│   ├── /assets            # Imágenes, fuentes, estilos CSS/SASS
+│   ├── Dockerfile         # Dockerfile específico para frontend
+│   ├── package.json
+│   ├── package-lock.json
+│   └── README.md          # Documentación frontend
+│
+├── .gitignore
+├── docker-compose.yml     # Para levantar backend y frontend juntos con Docker
+├── README.md              # Documentación general del proyecto
+└── Makefile               # Comandos comunes para build, test, run, etc.
+
+
+///////db
+-1 crear db en postgre
+-2 añadir el driver de postgre 'go get github.com/lib/pq' y 'import _ "github.com/lib/pq"' en el main.go
+-3 config goose para migraciones
+	-crear fichero migracion
+	-en el directorio donde este el fichero de migracion ejecutar 'goose postgres postgres://{user}:{pass}@localhost:5432/{db_name}' up para subir la migracion
+-4 configurar sqlc creando un sqlc.yaml en la raiz del proyecto

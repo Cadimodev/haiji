@@ -1,13 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
+	"github.com/Cadimodev/haiji/backend/internal/config"
+	"github.com/Cadimodev/haiji/backend/internal/database"
+	"github.com/Cadimodev/haiji/backend/internal/handlers"
+
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -36,6 +42,25 @@ func main() {
 		log.Fatal("ASSETS_ROOT environment variable is not set")
 	}
 
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL environment variable is not set")
+	}
+
+	dbConn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Error opening database: %s", err)
+	}
+	dbQueries := database.New(dbConn)
+
+	apiCFG := config.ApiConfig{
+		DB:           dbQueries,
+		Platform:     platform,
+		FilepathRoot: filepathRoot,
+		AssetsRoot:   assetsRoot,
+		Port:         port,
+	}
+
 	mux := http.NewServeMux()
 
 	// API endpoints
@@ -55,6 +80,11 @@ func main() {
 			return
 		}
 		http.ServeFile(w, r, filepath.Join(filepathRoot, "index.html"))
+	})
+
+	// API endpoints
+	mux.HandleFunc("POST /api/users", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerUserCreate(&apiCFG, w, r)
 	})
 
 	srv := &http.Server{
