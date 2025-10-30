@@ -86,6 +86,18 @@ func main() {
 	mux.HandleFunc("POST /api/users", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerUserCreate(&apiCFG, w, r)
 	})
+	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerUserUpdate(&apiCFG, w, r)
+	})
+	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerLogin(&apiCFG, w, r)
+	})
+	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerRefreshToken(&apiCFG, w, r)
+	})
+	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerRevokeToken(&apiCFG, w, r)
+	})
 
 	// DEV endpoints
 	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
