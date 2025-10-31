@@ -5,7 +5,7 @@ function LoginPage() {
     return (
         <div className="login-bg">
             <div className="login-container">
-                <h2 className="login-title">Log in</h2>
+                <h2 className="login-title">Login</h2>
                 <form className="login-form">
                     <input
                         type="email"
@@ -19,15 +19,20 @@ function LoginPage() {
                         className="login-input"
                         autoComplete="current-password"
                     />
-                    <button type="submit" className="login-btn">
-                        Log in
+                    <button type="submit" class="button">
+                        <span class="button_lg">
+                            <span class="button_sl"></span>
+                            <span class="button_text">Login</span>
+                        </span>
                     </button>
                 </form>
                 <a className="login-forgot" href="/forgot-password">
                     Forgot password?
                 </a>
             </div>
+
         </div>
+
     );
 }
 
