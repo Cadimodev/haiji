@@ -7,62 +7,55 @@ nav {
     font-family: 'Helvetica Neue', sans-serif;
 }
 
-nav .nav-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-nav .nav-links a {
-    color: #eee;
-    text-decoration: none;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+.btn-flip {
+    opacity: 1;
+    outline: 0;
+    color: #fff;
+    line-height: 40px;
     position: relative;
-    transition: color 0.3s ease;
-}
-
-nav .nav-links a::after {
-    content: '';
-    position: absolute;
-    width: 0%;
-    height: 2px;
-    bottom: -4px;
-    left: 0;
-    background-color: #ff0055;
-    transition: width 0.3s ease;
-}
-
-nav .nav-links a:hover {
-    color: #ff0055;
-}
-
-nav .nav-links a:hover::after {
-    width: 100%;
-}
-
-nav .nav-buttons {
-    display: flex;
-    gap: 1rem;
-}
-
-nav .nav-buttons .btn {
-    background-color: #ff0055;
-    color: white;
-    padding: 0.5rem 1.2rem;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    text-align: center;
+    letter-spacing: 1px;
+    display: inline-block;
+    text-decoration: none;
+    font-family: 'Open Sans';
     text-transform: uppercase;
-    border: none;
 }
 
-nav .nav-buttons .btn:hover {
-    background-color: #e6004a;
-    transform: scale(1.05);
+.btn-flip:hover:after {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
 }
 
-nav .nav-links .active-link {
-    color: #ff0055;
-    font-weight: bold;
+.btn-flip:hover:before {
+    opacity: 0;
+    transform: translateY(50%) rotateX(90deg);
+}
+
+.btn-flip:after {
+    top: 0;
+    left: 0;
+    opacity: 0;
+    width: 100%;
+    color: #323237;
+    display: block;
+    transition: 0.5s;
+    position: absolute;
+    background: #adadaf;
+    content: attr(data-back);
+    transform: translateY(-50%) rotateX(90deg);
+}
+
+.btn-flip:before {
+    top: 0;
+    left: 0;
+    opacity: 1;
+    color: #adadaf;
+    display: block;
+    padding: 0 30px;
+    line-height: 40px;
+    transition: 0.5s;
+    position: relative;
+    background: #323237;
+    content: attr(data-front);
+    transform: translateY(0) rotateX(0);
 }

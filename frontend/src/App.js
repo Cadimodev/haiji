@@ -5,6 +5,7 @@ import KanaChartPage from "./pages/KanaChartPage";
 import KanaPracticePage from "./pages/KanaPracticePage";
 import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar.js";
+import './styles/Common.css';
 
 function App() {
   return (

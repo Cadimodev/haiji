@@ -4,27 +4,16 @@ import '../styles/Navbar.css';
 function Navbar() {
     return (
         <nav>
-            <div className="nav-links">
-                <NavLink to="/" end className={({ isActive }) => (isActive ? 'active-link' : '')}>
-                    Home
+            <div>
+                <NavLink to="/" end className="btn-flip" data-back="ホーム" data-front="Home">
                 </NavLink>
-                <NavLink to="/kana-chart" className={({ isActive }) => (isActive ? 'active-link' : '')}>
-                    Kana Chart
+                <NavLink to="/kana-chart" end className="btn-flip" data-back="グラフ" data-front="Chart">
                 </NavLink>
-                <NavLink to="/kana-practice" className={({ isActive }) => (isActive ? 'active-link' : '')}>
-                    Practice
+                <NavLink to="/kana-practice" end className="btn-flip" data-back="練習" data-front="Practice">
                 </NavLink>
-                <NavLink to="/login" className={({ isActive }) => (isActive ? 'active-link' : '')}>
-                    Login
+                <NavLink to="/login" end className="btn-flip" data-back="ログイン" data-front="Login">
                 </NavLink>
             </div>
-            {/*
-            <div className="nav-buttons">
-                <button className="btn">Book now</button>
-                <button className="btn">Apply now</button>
-                <button className="btn">Join waitlist</button>
-            </div>
-            */}
         </nav>
     )
 }
