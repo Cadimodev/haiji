@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function KanaChartPage() {
+function LoginPage() {
     return (
         <div>
             <h1>Hiragana & Katakana Chart</h1>
@@ -10,4 +10,4 @@ function KanaChartPage() {
     );
 }
 
-export default KanaChartPage;
+export default LoginPage;

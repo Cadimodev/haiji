@@ -63,10 +63,6 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// API endpoints
-	// mux.HandleFunc("/api/login", loginHandler)
-	// mux.HandleFunc("/api/competitive", competitiveHandler)
-
 	// Static assets
 	staticFS := http.FileServer(http.Dir(filepathRoot))
 	mux.Handle("/static/", staticFS)
