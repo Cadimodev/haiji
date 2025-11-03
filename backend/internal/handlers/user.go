@@ -17,6 +17,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Username  string    `json:"username"`
 }
 
 func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
@@ -24,6 +25,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	type parameters struct {
 		Password string `json:"password"`
 		Email    string `json:"email"`
+		Username string `json:"username"`
 	}
 	type response struct {
 		User
@@ -44,6 +46,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		Email:          params.Email,
 		HashedPassword: hashedPass,
+		Username:       params.Username,
 	})
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create user", err)
@@ -55,6 +58,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 			Email:     user.Email,
+			Username:  user.Username,
 		},
 	})
 }
@@ -64,6 +68,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	type parameters struct {
 		Password string `json:"password"`
 		Email    string `json:"email"`
+		Username string `json:"username"`
 	}
 	type response struct {
 		User
@@ -98,6 +103,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		ID:             userID,
 		Email:          params.Email,
 		HashedPassword: hashedPassword,
+		Username:       params.Username,
 	})
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't update user", err)
@@ -110,6 +116,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 			Email:     user.Email,
+			Username:  user.Username,
 		},
 	})
 

@@ -15,7 +15,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 
 	type parameters struct {
 		Password string `json:"password"`
-		Email    string `json:"email"`
+		Username string `json:"username"`
 	}
 	type response struct {
 		User
@@ -31,15 +31,15 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := cfg.DB.GetUserByEmail(r.Context(), params.Email)
+	user, err := cfg.DB.GetUserByUsername(r.Context(), params.Username)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect email or password", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
 		return
 	}
 
 	_, err = auth.CheckPasswordHash(params.Password, user.HashedPassword)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect email or password", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
 		return
 	}
 

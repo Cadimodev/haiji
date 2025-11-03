@@ -5,7 +5,6 @@ import React, {
     useEffect,
     useCallback,
 } from "react";
-import { Link } from "react-router-dom";
 import '../styles/KanaPracticePage.css';
 
 const charGroups = {
@@ -158,7 +157,6 @@ function KanaPracticePage() {
     const [message, setMessage] = useState(MESSAGES.instruction);
     const [count, setCount] = useState(0);
     const [showRomanji, setShowRomanji] = useState(false);
-    const answerRef = useRef(null);
     const inputRef = useRef(null);
 
     // Generar pool con useMemo sin efectos secundarios

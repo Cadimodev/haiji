@@ -1,18 +1,24 @@
-import { NavLink, useNavigate } from 'react-router-dom'
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import "../styles/LoginPage.css";
 
-function LoginPage() {
-    const [username, setUsername] = useState("");
+function RegisterPage() {
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
     const [errors, setErrors] = useState({});
     const [backendError, setBackendError] = useState("");
     const navigate = useNavigate();
 
     function validate() {
         const newErrors = {};
+        if (!email) {
+            newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = "Email is invalid";
+        }
         if (!username) {
-            newErrors.email = "Username is required";
+            newErrors.password = "Username is required";
         }
         if (!password) {
             newErrors.password = "Password is required";
@@ -33,10 +39,10 @@ function LoginPage() {
             return;
         }
 
-        const userData = { username, password };
+        const userData = { email, username, password };
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData),
@@ -47,19 +53,19 @@ function LoginPage() {
                 if (errorData && errorData.message) {
                     setBackendError(errorData.message);
                 } else {
-                    setBackendError("Couldn't log in");
+                    setBackendError("Couldn't create user");
                 }
                 return;
             }
 
             const data = await response.json();
 
-            console.log('User logged in:', data);
-            navigate('/');
+            console.log('User created:', data);
+            navigate('/user-creation-success');
 
 
         } catch (error) {
-            console.error('Couldnt log in:', error);
+            console.error('Couldnt create user:', error);
             setBackendError("Error connecting to the server. Please try again later.");
         }
     }
@@ -67,8 +73,19 @@ function LoginPage() {
     return (
         <div className="login-bg">
             <div className="login-container">
-                <h2 className="login-title">Login</h2>
+                <h2 className="register-title">Register</h2>
                 <form className="login-form" onSubmit={handleSubmit}>
+                    <div className="input-group">
+                        {errors.email && <div className="error-msg">{errors.email}</div>}
+                        <input
+                            type="text"
+                            placeholder="Email"
+                            className="login-input"
+                            autoComplete="username"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                        />
+                    </div>
                     <div className="input-group">
                         {errors.username && <div className="error-msg">{errors.username}</div>}
                         <input
@@ -94,23 +111,14 @@ function LoginPage() {
                     <button type="submit" className="button">
                         <span className="button_lg">
                             <span className="button_sl"></span>
-                            <span className="button_text">Log in</span>
+                            <span className="button_text">Register</span>
                         </span>
                     </button>
                     {backendError && <div className="backend-error-msg">{backendError}</div>}
                 </form>
-                <NavLink to="/forgot-password" className="haiji-link">
-                    Forgot password?
-                </NavLink>
-                <div className='register-section'>
-                    <span>Don't have an account?</span>
-                    <NavLink to="/register" end className="haiji-link" >Sign up</NavLink>
-                </div>
             </div>
-
         </div>
-
     );
 }
 
-export default LoginPage;
+export default RegisterPage;
