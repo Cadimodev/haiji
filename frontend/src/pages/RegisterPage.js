@@ -1,119 +1,93 @@
-import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import "../styles/LoginPage.css";
+import React from "react";
+import { useUser } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
+import { useAuthForm } from "../hooks/useAuthForm";
+import { validateRegister } from "../utils/validation";
+import "../styles/AuthForm.css";
 
 function RegisterPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [username, setUsername] = useState("");
-    const [errors, setErrors] = useState({});
-    const [backendError, setBackendError] = useState("");
+    const { login } = useUser();
     const navigate = useNavigate();
 
-    function validate() {
-        const newErrors = {};
-        if (!email) {
-            newErrors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = "Email is invalid";
-        }
-        if (!username) {
-            newErrors.username = "Username is required";
-        } else if (/\s/.test(username)) {
-            newErrors.username = "Username must not contain spaces";
-        }
-        if (!password) {
-            newErrors.password = "Password is required";
-        } else if (password.length < 6) {
-            newErrors.password = "Password must be at least 6 characters";
-        }
-        return newErrors;
-    }
+    const {
+        values,
+        errors,
+        backendError,
+        handleChange,
+        handleSubmit,
+        setBackendError,
+    } = useAuthForm(
+        { email: "", username: "", password: "" },
+        validateRegister
+    );
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-
-        const validationErrors = validate();
-        setErrors(validationErrors);
-        setBackendError("");
-
-        if (Object.keys(validationErrors).length > 0) {
-            return;
-        }
-
-        const userData = { email, username, password };
-
+    const onSubmit = async () => {
         try {
-            const response = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData),
+            const response = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                if (errorData && errorData.message) {
-                    setBackendError(errorData.message);
-                } else {
-                    setBackendError("Couldn't create user");
-                }
+                setBackendError(errorData.message || "Registration failed");
                 return;
             }
 
             const data = await response.json();
-
-            console.log('User created:', data);
-            navigate('/user-creation-success');
-
-
+            login(data.username, data.token);
+            navigate("/user-creation-success");
         } catch (error) {
-            console.error('Couldnt create user:', error);
-            setBackendError("Error connecting to the server. Please try again later.");
+            setBackendError("Error connecting to server");
         }
-    }
+    };
 
     return (
-        <div className="login-bg">
-            <div className="login-container">
-                <h2 className="register-title">Register</h2>
-                <form className="login-form" onSubmit={handleSubmit}>
+        <div className="auth-form-bg">
+            <div className="auth-form-container">
+                <h2 className="auth-form-title">Register</h2>
+                <form className="auth-form" onSubmit={(e) => handleSubmit(e, onSubmit)}>
                     <div className="input-group">
                         {errors.email && <div className="error-msg">{errors.email}</div>}
                         <input
+                            className='auth-form-input'
                             type="text"
+                            name="email"
                             placeholder="Email"
-                            className="login-input"
+                            value={values.email}
+                            onChange={handleChange}
                             autoComplete="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
                         />
                     </div>
                     <div className="input-group">
                         {errors.username && <div className="error-msg">{errors.username}</div>}
                         <input
+                            className='auth-form-input'
                             type="text"
+                            name="username"
                             placeholder="Username"
-                            className="login-input"
+                            value={values.username}
+                            onChange={handleChange}
                             autoComplete="username"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
                         />
                     </div>
                     <div className="input-group">
                         {errors.password && <div className="error-msg">{errors.password}</div>}
                         <input
+                            className='auth-form-input'
                             type="password"
+                            name="password"
                             placeholder="Password"
-                            className="login-input"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            value={values.password}
+                            onChange={handleChange}
+                            autoComplete="new-password"
                         />
                     </div>
-                    <button type="submit" className="button">
-                        <span className="button_lg">
-                            <span className="button_sl"></span>
-                            <span className="button_text">Register</span>
+                    <button type="submit" className="submit-button">
+                        <span className="submit-button-lg">
+                            <span className="submit-button-sl"></span>
+                            <span className="submit-button-text">Register</span>
                         </span>
                     </button>
                     {backendError && <div className="backend-error-msg">{backendError}</div>}

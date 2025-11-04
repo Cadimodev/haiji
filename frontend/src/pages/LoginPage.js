@@ -1,13 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useUser } from "../context/UserContext";
+import { useAuthForm } from "../hooks/useAuthForm";
+import { validateLogin } from "../utils/validation";
+import "../styles/AuthForm.css";
 import "../styles/LoginPage.css";
 
 function LoginPage() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [errors, setErrors] = useState({});
-    const [backendError, setBackendError] = useState("");
     const { login, user } = useUser();
     const navigate = useNavigate();
 
@@ -17,93 +16,72 @@ function LoginPage() {
         }
     }, [user, navigate]);
 
-    function validate() {
-        const newErrors = {};
-        if (!username) {
-            newErrors.email = "Username is required";
-        }
-        if (!password) {
-            newErrors.password = "Password is required";
-        } else if (password.length < 6) {
-            newErrors.password = "Password must be at least 6 characters";
-        }
-        return newErrors;
-    }
+    const {
+        values,
+        errors,
+        backendError,
+        handleChange,
+        handleSubmit,
+        setBackendError,
+    } = useAuthForm(
+        { username: "", password: "" },
+        validateLogin
+    );
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-
-        const validationErrors = validate();
-        setErrors(validationErrors);
-        setBackendError("");
-
-        if (Object.keys(validationErrors).length > 0) {
-            return;
-        }
-
-        const userData = { username, password };
-
+    const onSubmit = async () => {
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData),
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                if (errorData && errorData.message) {
-                    setBackendError(errorData.message);
-                } else {
-                    setBackendError("Couldn't log in");
-                }
+                setBackendError(errorData.message || "Login failed");
                 return;
             }
 
             const data = await response.json();
-
-            console.log('User logged in:', data);
-            login(data.username, data.token, data.refresh_token);
-            navigate('/');
-
-
+            login(data.username, data.token); // Actualiza el contexto global
+            navigate("/"); // Redirigir
         } catch (error) {
-            console.error('Couldnt log in:', error);
-            setBackendError("Error connecting to the server. Please try again later.");
+            setBackendError("Error connecting to server");
         }
-    }
+    };
+
 
     return (
-        <div className="login-bg">
-            <div className="login-container">
-                <h2 className="login-title">Login</h2>
-                <form className="login-form" onSubmit={handleSubmit}>
+        <div className="auth-form-bg">
+            <div className="auth-form-container">
+                <h2 className="auth-form-title">Login</h2>
+                <form className="auth-form" onSubmit={(e) => handleSubmit(e, onSubmit)}>
                     <div className="input-group">
                         {errors.username && <div className="error-msg">{errors.username}</div>}
                         <input
+                            className='auth-form-input'
                             type="text"
+                            name="username"
+                            value={values.username}
+                            onChange={handleChange}
                             placeholder="Username"
-                            className="login-input"
-                            autoComplete="username"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
                         />
                     </div>
                     <div className="input-group">
                         {errors.password && <div className="error-msg">{errors.password}</div>}
                         <input
+                            className='auth-form-input'
                             type="password"
+                            name="password"
+                            value={values.password}
+                            onChange={handleChange}
                             placeholder="Password"
-                            className="login-input"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
                         />
                     </div>
-                    <button type="submit" className="button">
-                        <span className="button_lg">
-                            <span className="button_sl"></span>
-                            <span className="button_text">Log in</span>
+                    <button type="submit" className="submit-button">
+                        <span className="submit-button-lg">
+                            <span className="submit-button-sl"></span>
+                            <span className="submit-button-text">Log in</span>
                         </span>
                     </button>
                     {backendError && <div className="backend-error-msg">{backendError}</div>}
