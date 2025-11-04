@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useUser } from "../context/UserContext";
 import "../styles/LoginPage.css";
 
 function LoginPage() {
@@ -7,7 +8,14 @@ function LoginPage() {
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [backendError, setBackendError] = useState("");
+    const { login, user } = useUser();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            navigate("/");
+        }
+    }, [user, navigate]);
 
     function validate() {
         const newErrors = {};
@@ -55,6 +63,7 @@ function LoginPage() {
             const data = await response.json();
 
             console.log('User logged in:', data);
+            login(data.username, data.token, data.refresh_token);
             navigate('/');
 
 

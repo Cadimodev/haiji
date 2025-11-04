@@ -71,6 +71,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
+			Username:  user.Username,
 		},
 		Token:        accessToken,
 		RefreshToken: refreshToken,
