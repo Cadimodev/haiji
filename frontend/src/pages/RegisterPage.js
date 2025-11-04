@@ -18,7 +18,9 @@ function RegisterPage() {
             newErrors.email = "Email is invalid";
         }
         if (!username) {
-            newErrors.password = "Username is required";
+            newErrors.username = "Username is required";
+        } else if (/\s/.test(username)) {
+            newErrors.username = "Username must not contain spaces";
         }
         if (!password) {
             newErrors.password = "Password is required";
@@ -81,7 +83,7 @@ function RegisterPage() {
                             type="text"
                             placeholder="Email"
                             className="login-input"
-                            autoComplete="username"
+                            autoComplete="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                         />
