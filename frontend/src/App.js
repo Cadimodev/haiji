@@ -6,6 +6,7 @@ import KanaPracticePage from "./pages/KanaPracticePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import UserCreatedPage from "./pages/UserCreatedPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import Navbar from "./components/Navbar";
 import { UserProvider } from "./context/UserContext";
 import './styles/Common.css';
@@ -22,6 +23,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/user-creation-success" element={<UserCreatedPage />} />
+          <Route path="/user-profile" element={<UserProfilePage />} />
         </Routes>
       </BrowserRouter>
     </UserProvider>

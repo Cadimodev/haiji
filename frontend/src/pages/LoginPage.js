@@ -43,7 +43,7 @@ function LoginPage() {
             }
 
             const data = await response.json();
-            login(data.username, data.token); // Actualiza el contexto global
+            login(data.username, data.token, data.refresh_token); // Actualiza el contexto global
             navigate("/"); // Redirigir
         } catch (error) {
             setBackendError("Error connecting to server");

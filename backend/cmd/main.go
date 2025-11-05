@@ -85,14 +85,20 @@ func main() {
 	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerUserUpdate(&apiCFG, w, r)
 	})
+	mux.HandleFunc("GET /api/user-profile", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerUserProfile(&apiCFG, w, r)
+	})
 	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerLogin(&apiCFG, w, r)
 	})
-	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /api/refresh-token", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerRefreshToken(&apiCFG, w, r)
 	})
-	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /api/revoke-token", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerRevokeToken(&apiCFG, w, r)
+	})
+	mux.HandleFunc("GET /api/validate-token", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerValidateToken(&apiCFG, w, r)
 	})
 
 	// DEV endpoints

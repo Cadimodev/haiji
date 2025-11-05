@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const UserContext = createContext();
 
@@ -8,14 +8,19 @@ export function useUser() {
 
 export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [loadingUser, setLoadingUser] = useState(true);
 
     useEffect(() => {
         const username = localStorage.getItem("username");
         const token = localStorage.getItem("token");
         const refreshToken = localStorage.getItem("refreshToken");
+
         if (username && token && refreshToken) {
             setUser({ username, token, refreshToken });
+        } else {
+            setUser(null);
         }
+        setLoadingUser(false); // Fin de la carga de usuario
     }, []);
 
     const login = (username, token, refreshToken) => {
@@ -33,7 +38,7 @@ export function UserProvider({ children }) {
     };
 
     return (
-        <UserContext.Provider value={{ user, login, logout }}>
+        <UserContext.Provider value={{ user, login, logout, loadingUser }}>
             {children}
         </UserContext.Provider>
     );

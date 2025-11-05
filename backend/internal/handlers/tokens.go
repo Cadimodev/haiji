@@ -56,3 +56,26 @@ func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func HandlerValidateToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't find JWT", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.JWTSecret)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
+		return
+	}
+
+	_, err = cfg.DB.GetUserByID(r.Context(), userID)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid user", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

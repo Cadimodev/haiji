@@ -121,3 +121,38 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	})
 
 }
+
+func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
+
+	type response struct {
+		User
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't find JWT", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.JWTSecret)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
+		return
+	}
+
+	user, err := cfg.DB.GetUserByID(r.Context(), userID)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid user", err)
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, response{
+		User: User{
+			ID:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     user.Email,
+			Username:  user.Username,
+		},
+	})
+}

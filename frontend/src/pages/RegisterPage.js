@@ -36,7 +36,7 @@ function RegisterPage() {
             }
 
             const data = await response.json();
-            login(data.username, data.token);
+            login(data.username, data.token, data.refresh_token);
             navigate("/user-creation-success");
         } catch (error) {
             setBackendError("Error connecting to server");

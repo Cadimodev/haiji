@@ -16,7 +16,7 @@ function Navbar() {
                 {user
                     ? (
                         <>
-                            <NavLink to="/" end className="btn-flip" data-back={user.username} data-front={user.username} />
+                            <NavLink to="/user-profile" end className="btn-flip" data-back={user.username} data-front={user.username} />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="28"
