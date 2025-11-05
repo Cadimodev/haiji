@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { useUser } from "../context/UserContext";
+import { useLogout } from "../hooks/useLogout";
 import '../styles/Navbar.css';
 
 function Navbar() {
-    const { user, logout } = useUser();
+    const { user } = useUser();
+    const handleLogout = useLogout();
 
     return (
         <nav>
@@ -29,7 +31,7 @@ function Navbar() {
                                 strokeLinejoin="round"
                                 className="logout-icon"
                                 style={{ marginLeft: "12px", verticalAlign: "middle" }}
-                                onClick={logout}
+                                onClick={handleLogout}
                             >
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                 <polyline points="16 17 21 12 16 7" />

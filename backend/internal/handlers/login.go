@@ -37,8 +37,12 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	_, err = auth.CheckPasswordHash(params.Password, user.HashedPassword)
+	result, err := auth.CheckPasswordHash(params.Password, user.HashedPassword)
 	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
+		return
+	}
+	if !result {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
 		return
 	}
