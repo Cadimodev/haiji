@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthForm } from "../hooks/useAuthForm";
 import { validateRegister } from "../utils/validation";
@@ -7,6 +7,7 @@ import "../styles/AuthForm.css";
 
 function RegisterPage() {
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const initialValues = useMemo(
         () => ({ email: "", username: "", password: "" }),
@@ -23,31 +24,33 @@ function RegisterPage() {
     } = useAuthForm(initialValues, validateRegister);
 
     const onSubmit = async () => {
-        try {
-            const response = await registerRequest(values);
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-            if (!response.ok) {
-                let message = "Registration failed";
-                try {
-                    const errorData = await response.json();
-                    message = errorData.message || message;
-                } catch { }
-                setBackendError(message);
-                return;
-            }
+        const { ok, data, error } = await registerRequest(values);
 
-            const data = await response.json();
-            navigate("/user-creation-success", {
-                replace: true,
-                state: {
-                    username: data.username,
-                    token: data.token,
-                    refresh: data.refresh_token ?? "",
-                },
-            });
-        } catch {
-            setBackendError("Error connecting to server");
+        if (!ok) {
+            setBackendError(error || "Registration failed");
+            setIsSubmitting(false);
+            return;
         }
+
+        if (!data?.username || !data?.token) {
+            setBackendError("Unexpected server response");
+            setIsSubmitting(false);
+            return;
+        }
+
+        navigate("/user-creation-success", {
+            replace: true,
+            state: {
+                username: data.username,
+                token: data.token,
+                refresh: data.refresh_token ?? "",
+            },
+        });
+
+        setIsSubmitting(false);
     };
 
     return (
@@ -95,10 +98,12 @@ function RegisterPage() {
                         />
                     </div>
 
-                    <button type="submit" className="submit-button">
+                    <button type="submit" className="submit-button" disabled={isSubmitting}>
                         <span className="submit-button-lg">
                             <span className="submit-button-sl"></span>
-                            <span className="submit-button-text">Register</span>
+                            <span className="submit-button-text">
+                                {isSubmitting ? "Registering..." : "Register"}
+                            </span>
                         </span>
                     </button>
 

@@ -1,93 +1,67 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { validateToken, refreshTokenRequest } from "../utils/authService";
 import { useAuthForm } from "../hooks/useAuthForm";
 import { useLogout } from "../hooks/useLogout";
+import { useAuthManager } from "../hooks/useAuthManager";
+import {
+    getUserProfileAuthed,
+    updateUserProfileAuthed,
+} from "../services/authService";
 import { validateRegister } from "../utils/validation";
 import "../styles/AuthForm.css";
 
 function UserProfilePage() {
     const { user, login, loadingUser } = useUser();
+    const handleLogout = useLogout();
+    const navigate = useNavigate();
+
+    // Hook que añade Authorization y gestiona refresh on 401 (formato uniforme)
+    const { fetchJsonWithAuth } = useAuthManager();
+
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const navigate = useNavigate();
-    const handleLogout = useLogout();
-
-    // 🔹 Carga el perfil de usuario desde el backend
-    const loadProfile = useCallback(async (token) => {
+    // Carga perfil con respuesta uniforme { ok, status, data, error }
+    const loadProfile = useCallback(async () => {
         try {
-            const response = await fetch("/api/user-profile", {
-                method: "GET",
-                headers: { Authorization: "Bearer " + token },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setProfileData(data);
-            } else {
-                handleLogout();
-                navigate("/");
-            }
-        } catch {
-            handleLogout();
-            navigate("/");
-        }
-    }, [handleLogout, navigate]);
-
-    // 🔹 Verifica autenticación y carga datos del perfil
-    useEffect(() => {
-        async function checkAuth() {
-            if (loadingUser) return;
-
-            if (!user?.token || !user?.refreshToken) {
+            const { ok, data } = await getUserProfileAuthed(fetchJsonWithAuth);
+            if (!ok || !data) {
                 handleLogout();
                 navigate("/");
                 return;
             }
-
-            const valid = await validateToken(user.token);
-            if (valid) {
-                await loadProfile(user.token);
-            } else {
-                const newJWT = await refreshTokenRequest(user.refreshToken);
-                if (newJWT) {
-                    login(user.username, newJWT, user.refreshToken);
-                    const stillValid = await validateToken(newJWT);
-                    if (stillValid) {
-                        await loadProfile(newJWT);
-                    } else {
-                        handleLogout();
-                        navigate("/");
-                    }
-                } else {
-                    handleLogout();
-                    navigate("/");
-                }
-            }
-
+            setProfileData(data);
+        } catch {
+            handleLogout();
+            navigate("/");
+        } finally {
             setLoading(false);
         }
+    }, [fetchJsonWithAuth, handleLogout, navigate]);
 
-        checkAuth();
-    }, [user, loadingUser, login, handleLogout, navigate, loadProfile]);
-
-    // 🔹 Redirige si el usuario ha hecho logout mientras tanto
+    // Guard: si no hay sesión cuando el contexto ya cargó, fuera
     useEffect(() => {
-        if (!user && !loadingUser) {
+        if (loadingUser) return;
+        if (!user?.token || !user?.refreshToken) {
+            handleLogout();
             navigate("/");
+            return;
         }
-    }, [user, loadingUser, navigate]);
+        loadProfile();
+    }, [loadingUser, user, handleLogout, navigate, loadProfile]);
 
-    // 🔹 Valores iniciales del formulario, memorizados
-    const initialValues = useMemo(() => ({
-        email: profileData?.email || "",
-        username: profileData?.username || "",
-        password: "",
-    }), [profileData?.email, profileData?.username]);
+    // Valores iniciales del formulario, memorizados
+    const initialValues = useMemo(
+        () => ({
+            email: profileData?.email || "",
+            username: profileData?.username || "",
+            password: "",
+        }),
+        [profileData?.email, profileData?.username]
+    );
 
-    // 🔹 Hook del formulario de autenticación
     const {
         values,
         errors,
@@ -97,30 +71,37 @@ function UserProfilePage() {
         setBackendError,
     } = useAuthForm(initialValues, validateRegister);
 
-    // 🔹 Envía los cambios al backend
+    // Update perfil usando servicio authed (formato uniforme)
     const onSubmit = async () => {
-        try {
-            const response = await fetch("/api/users", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: "Bearer " + user.token,
-                },
-                body: JSON.stringify(values),
-            });
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                setBackendError(errorData.message || "Update failed");
+        try {
+            const { ok, data, error } = await updateUserProfileAuthed(
+                fetchJsonWithAuth,
+                values
+            );
+
+            if (!ok) {
+                setBackendError(error || "Update failed");
                 return;
             }
 
-            const data = await response.json();
-            login(data.username, data.token || user.token, user.refreshToken);
+            // Si el backend devuelve tokens nuevos al actualizar, persístelos
+            if (data?.token || data?.refresh_token) {
+                login(
+                    data.username ?? user.username,
+                    data.token ?? user.token,
+                    data.refresh_token ?? user.refreshToken
+                );
+            }
+
             setBackendError("");
-            navigate(0); // refresca página
+            await loadProfile(); // refresca datos sin recargar la página
         } catch {
             setBackendError("Error connecting to server");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -167,10 +148,12 @@ function UserProfilePage() {
                         />
                     </div>
 
-                    <button type="submit" className="submit-button">
+                    <button type="submit" className="submit-button" disabled={isSubmitting}>
                         <span className="submit-button-lg">
                             <span className="submit-button-sl"></span>
-                            <span className="submit-button-text">Save</span>
+                            <span className="submit-button-text">
+                                {isSubmitting ? "Saving..." : "Save"}
+                            </span>
                         </span>
                     </button>
 

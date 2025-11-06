@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useAuthForm } from "../hooks/useAuthForm";
@@ -10,8 +10,9 @@ import "../styles/LoginPage.css";
 function LoginPage() {
     const { user, loadingUser, login } = useUser();
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Si hay sesión, sácale del login (tu guard también lo hará, pero esto da mejor UX)
+    // Si ya hay sesión, saca del login (UX mejor; el guard también lo hará)
     useEffect(() => {
         if (!loadingUser && user) {
             navigate("/", { replace: true });
@@ -30,28 +31,29 @@ function LoginPage() {
     } = useAuthForm(initialValues, validateLogin);
 
     const onSubmit = async () => {
-        try {
-            const resp = await loginRequest({
-                username: values.username,
-                password: values.password,
-            });
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-            if (!resp.ok) {
-                let message = "Invalid credentials";
-                try {
-                    const e = await resp.json();
-                    message = e.message || message;
-                } catch { }
-                setBackendError(message);
-                return;
-            }
+        const { ok, data, error } = await loginRequest({
+            username: values.username,
+            password: values.password,
+        });
 
-            const data = await resp.json(); // { username, token, refresh_token, ... }
-            login(data.username, data.token, data.refresh_token ?? "");
-            navigate("/", { replace: true });
-        } catch {
-            setBackendError("Cannot reach server");
+        if (!ok) {
+            setBackendError(error || "Invalid credentials");
+            setIsSubmitting(false);
+            return;
         }
+
+        if (!data?.username || !data?.token) {
+            setBackendError("Unexpected server response");
+            setIsSubmitting(false);
+            return;
+        }
+
+        login(data.username, data.token, data.refresh_token ?? "");
+        navigate("/", { replace: true });
+        setIsSubmitting(false);
     };
 
     if (loadingUser) return <div>Loading...</div>;
@@ -88,7 +90,7 @@ function LoginPage() {
                         />
                     </div>
 
-                    <button type="submit" className="submit-button">
+                    <button type="submit" className="submit-button" disabled={isSubmitting}>
                         <span className="submit-button-lg">
                             <span className="submit-button-sl"></span>
                             <span className="submit-button-text">Log in</span>
@@ -97,12 +99,16 @@ function LoginPage() {
 
                     {backendError && <div className="backend-error-msg">{backendError}</div>}
                 </form>
+
                 <NavLink to="/forgot-password" className="haiji-link">
                     Forgot password?
                 </NavLink>
-                <div className='register-section'>
+
+                <div className="register-section">
                     <span>Don't have an account?</span>
-                    <NavLink to="/register" end className="haiji-link" >Sign up</NavLink>
+                    <NavLink to="/register" end className="haiji-link">
+                        Sign up
+                    </NavLink>
                 </div>
             </div>
         </div>
