@@ -29,6 +29,8 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 	type response struct {
 		User
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -52,14 +54,38 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create user", err)
 	}
 
+	accessToken, err := auth.MakeJWT(
+		user.ID,
+		cfg.JWTSecret,
+		time.Hour,
+	)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create access JWT", err)
+		return
+	}
+
+	refreshToken := auth.MakeRefreshToken()
+
+	_, err = cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
+	})
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
+		return
+	}
+
 	utils.RespondWithJSON(w, http.StatusCreated, response{
 		User: User{
 			ID:        user.ID,
+			Email:     user.Email,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
 			Username:  user.Username,
 		},
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	})
 }
 

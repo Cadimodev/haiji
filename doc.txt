@@ -43,3 +43,7 @@
 	-crear fichero migracion
 	-en el directorio donde este el fichero de migracion ejecutar 'goose postgres postgres://{user}:{pass}@localhost:5432/{db_name}' up para subir la migracion
 -4 configurar sqlc creando un sqlc.yaml en la raiz del proyecto
+
+////auth
+-Añadir hasheo de contraseñas con argon2id - go get github.com/alexedwards/argon2id
+-Añadir JWT - go get -u github.com/golang-jwt/jwt/v5

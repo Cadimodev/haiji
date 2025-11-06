@@ -5,13 +5,14 @@ export function useAuthForm(initialValues, validate) {
     const [errors, setErrors] = useState({});
     const [backendError, setBackendError] = useState("");
 
-    // Ref para saber si el usuario ha modificado el formulario
+    // Ref for knowing if user has edited the form
     const isDirty = useRef(false);
 
     useEffect(() => {
-        if (!isDirty.current) {
+        if (!isDirty.current && JSON.stringify(values) !== JSON.stringify(initialValues)) {
             setValues(initialValues);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialValues]);
 
     const handleChange = (e) => {

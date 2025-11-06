@@ -9,7 +9,8 @@ import UserCreatedPage from "./pages/UserCreatedPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import Navbar from "./components/Navbar";
 import { UserProvider } from "./context/UserContext";
-import './styles/Common.css';
+import { ProtectedRoute, PublicOnlyRoute } from "./components/RouteGuards";
+import "./styles/Common.css";
 
 function App() {
   return (
@@ -20,10 +21,31 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/kana-chart" element={<KanaChartPage />} />
           <Route path="/kana-practice" element={<KanaPracticePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <LoginPage />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicOnlyRoute>
+                <RegisterPage />
+              </PublicOnlyRoute>
+            }
+          />
           <Route path="/user-creation-success" element={<UserCreatedPage />} />
-          <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route
+            path="/user-profile"
+            element={
+              <ProtectedRoute>
+                <UserProfilePage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </UserProvider>
