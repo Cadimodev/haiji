@@ -9,15 +9,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sqlc-dev/pqtype"
 )
 
 type RefreshToken struct {
+	ID        int64
+	UserID    uuid.UUID
 	Token     string
 	CreatedAt time.Time
-	UpdatedAt time.Time
-	UserID    uuid.UUID
 	ExpiresAt time.Time
 	RevokedAt sql.NullTime
+	UserAgent sql.NullString
+	Ip        pqtype.Inet
 }
 
 type User struct {
@@ -25,6 +28,6 @@ type User struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Email          string
-	HashedPassword string
 	Username       string
+	HashedPassword string
 }

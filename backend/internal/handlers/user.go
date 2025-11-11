@@ -3,12 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
+	"github.com/Cadimodev/haiji/backend/internal/sessions"
 	"github.com/google/uuid"
 )
 
@@ -37,21 +39,35 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't decode user", err)
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid JSON", err)
+		return
+	}
+
+	email := strings.ToLower(strings.TrimSpace(params.Email))
+	username := strings.TrimSpace(params.Username)
+	if email == "" || username == "" || params.Password == "" {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Missing or invalid fields", nil)
+		return
 	}
 
 	hashedPass, err := auth.HashPassword(params.Password)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't hash password", err)
+		return
 	}
 
 	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-		Email:          params.Email,
+		Email:          email,
 		HashedPassword: hashedPass,
-		Username:       params.Username,
+		Username:       username,
 	})
 	if err != nil {
+		if database.IsUnique(err) {
+			utils.RespondWithErrorJSON(w, http.StatusConflict, "Email or username already in use", nil)
+			return
+		}
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create user", err)
+		return
 	}
 
 	accessToken, err := auth.MakeJWT(
@@ -64,13 +80,9 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	refreshToken := auth.MakeRefreshToken()
+	ip, userAgent := utils.GetClientInfo(r)
 
-	_, err = cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
-		UserID:    user.ID,
-		Token:     refreshToken,
-		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
-	})
+	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
 		return
@@ -99,8 +111,11 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 	type response struct {
 		User
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 
+	// Auth JWT
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't find JWT", err)
@@ -112,14 +127,23 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Parse body
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err = decoder.Decode(&params)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid JSON", err)
 		return
 	}
 
+	email := strings.ToLower(strings.TrimSpace(params.Email))
+	username := strings.TrimSpace(params.Username)
+	if email == "" || username == "" || params.NewPassword == "" {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Missing or invalid fields", nil)
+		return
+	}
+
+	// Verify current pass
 	user, err := cfg.DB.GetUserByID(r.Context(), userID)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
@@ -136,20 +160,38 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Hash new pass
 	hashedPassword, err := auth.HashPassword(params.NewPassword)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't hash password", err)
 		return
 	}
 
+	// Update user
 	user, err = cfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
 		ID:             userID,
-		Email:          params.Email,
+		Email:          strings.ToLower(strings.TrimSpace(params.Email)),
 		HashedPassword: hashedPassword,
 		Username:       params.Username,
 	})
 	if err != nil {
+		if database.IsUnique(err) {
+			utils.RespondWithErrorJSON(w, http.StatusConflict, "Email or username already in use", nil)
+			return
+		}
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't update user", err)
+		return
+	}
+
+	// Revoke & generate new tokens
+	ip, userAgent := utils.GetClientInfo(r)
+	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(
+		r.Context(), cfg.DB, userID, userAgent, ip,
+		60*24*time.Hour,          // refresh TTL
+		cfg.JWTSecret, time.Hour, // access TTL
+	)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't rotate session", err)
 		return
 	}
 
@@ -161,8 +203,9 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 			Email:     user.Email,
 			Username:  user.Username,
 		},
+		Token:        newAccess,
+		RefreshToken: newRefresh,
 	})
-
 }
 
 func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {

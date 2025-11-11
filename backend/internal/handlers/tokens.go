@@ -48,7 +48,7 @@ func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	_, err = cfg.DB.RevokeRefreshToken(r.Context(), refreshToken)
+	err = cfg.DB.RevokeRefreshToken(r.Context(), refreshToken)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't revoke session", err)
 		return

@@ -78,13 +78,18 @@ function UserProfilePage() {
         setIsSubmitting(true);
 
         try {
-            const { ok, data, error } = await updateUserProfileAuthed(
+            const { ok, data, error, status } = await updateUserProfileAuthed(
                 fetchJsonWithAuth,
                 values
             );
 
             if (!ok) {
-                setBackendError(error || "Update failed");
+                if (status === 409) {
+                    setBackendError("Email or Username already in use");
+
+                } else {
+                    setBackendError(error || "Update failed");
+                }
                 return;
             }
 

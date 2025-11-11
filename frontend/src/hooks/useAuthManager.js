@@ -1,10 +1,8 @@
-// src/hooks/useAuthManager.js
 import { useCallback } from "react";
 import { useUser } from "../context/UserContext";
 import { refreshTokenRequest } from "../services/authService";
-import { httpRequest } from "../utils/http"; // para la variante JSON uniforme
+import { httpRequest } from "../utils/http";
 
-// Helper para añadir el header Authorization
 function withAuth(init = {}, token) {
     return {
         ...init,
@@ -18,10 +16,6 @@ function withAuth(init = {}, token) {
 export function useAuthManager() {
     const { user, login, logout } = useUser();
 
-    /**
-     * Intenta refrescar el access token.
-     * Devuelve el nuevo token (string) o null si falla.
-     */
     const tryRefresh = useCallback(async () => {
         if (!user?.refreshToken) return null;
 
@@ -31,15 +25,10 @@ export function useAuthManager() {
         const newToken = data.token;
         const newRefresh = data.refresh_token ?? user.refreshToken;
 
-        // Persistimos (esto estabiliza el contexto con el nuevo token)
         login(user.username, newToken, newRefresh);
         return newToken;
     }, [user, login]);
 
-    /**
-     * fetch con auth que reintenta una vez si recibe 401.
-     * Devuelve Response nativo.
-     */
     const fetchWithAuth = useCallback(
         async (input, init = {}) => {
             if (!user?.token) throw new Error("UNAUTHENTICATED");
@@ -71,13 +60,6 @@ export function useAuthManager() {
         [user, tryRefresh, logout]
     );
 
-    /**
-     * Variante cómoda que devuelve un objeto uniforme:
-     * { ok, status, data, error, res }
-     *
-     * - Usa httpRequest para parsear JSON y construir 'error' coherente.
-     * - Reintenta una vez tras refresh si recibe 401 en el primer intento.
-     */
     const fetchJsonWithAuth = useCallback(
         async (input, init = {}) => {
             if (!user?.token) {

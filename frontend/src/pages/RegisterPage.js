@@ -27,10 +27,15 @@ function RegisterPage() {
         if (isSubmitting) return;
         setIsSubmitting(true);
 
-        const { ok, data, error } = await registerRequest(values);
+        const { ok, data, error, status } = await registerRequest(values);
 
         if (!ok) {
-            setBackendError(error || "Registration failed");
+            if (status === 409) {
+                setBackendError("Email or Username already in use");
+            } else {
+                setBackendError(error || "Registration failed");
+            }
+
             setIsSubmitting(false);
             return;
         }

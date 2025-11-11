@@ -1,23 +1,34 @@
 -- name: CreateRefreshToken :one
-INSERT INTO refresh_tokens (token, created_at, updated_at, user_id, expires_at)
-VALUES (
-    $1,
-    NOW(),
-    NOW(),
-    $2,
-    $3
-)
+INSERT INTO refresh_tokens (user_id, token, expires_at, user_agent, ip)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: RevokeRefreshToken :one
-UPDATE refresh_tokens SET revoked_at = NOW(),
-updated_at = NOW()
+-- name: GetActiveRefreshTokenByToken :one
+SELECT * FROM refresh_tokens
 WHERE token = $1
-RETURNING *;
+  AND revoked_at IS NULL
+  AND now() < expires_at
+LIMIT 1;
+
+-- name: RevokeRefreshTokenByID :exec
+UPDATE refresh_tokens SET revoked_at = now()
+WHERE id = $1 AND revoked_at IS NULL;
+
+-- name: RevokeAllRefreshTokensForUser :exec
+UPDATE refresh_tokens SET revoked_at = now()
+WHERE user_id = $1 AND revoked_at IS NULL;
 
 -- name: GetUserFromRefreshToken :one
-SELECT users.* FROM users
-JOIN refresh_tokens ON users.id = refresh_tokens.user_id
-WHERE refresh_tokens.token = $1
-AND revoked_at IS NULL
-AND expires_at > NOW();
+SELECT u.*
+FROM refresh_tokens rt
+JOIN users u ON u.id = rt.user_id
+WHERE rt.token = $1
+  AND rt.revoked_at IS NULL
+  AND now() < rt.expires_at
+LIMIT 1;
+
+-- name: RevokeRefreshToken :exec
+UPDATE refresh_tokens
+SET revoked_at = now()
+WHERE token = $1
+  AND revoked_at IS NULL;

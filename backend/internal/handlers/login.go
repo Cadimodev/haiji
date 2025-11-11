@@ -7,8 +7,8 @@ import (
 
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
-	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
+	"github.com/Cadimodev/haiji/backend/internal/sessions"
 )
 
 func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
@@ -57,13 +57,9 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	refreshToken := auth.MakeRefreshToken()
+	ip, userAgent := utils.GetClientInfo(r)
 
-	_, err = cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
-		UserID:    user.ID,
-		Token:     refreshToken,
-		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
-	})
+	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
 		return
