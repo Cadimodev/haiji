@@ -92,9 +92,10 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
+		NewPassword string `json:"newpassword"`
+		OldPassword string `json:"oldpassword"`
+		Email       string `json:"email"`
+		Username    string `json:"username"`
 	}
 	type response struct {
 		User
@@ -119,13 +120,29 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	hashedPassword, err := auth.HashPassword(params.Password)
+	user, err := cfg.DB.GetUserByID(r.Context(), userID)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
+		return
+	}
+
+	result, err := auth.CheckPasswordHash(params.OldPassword, user.HashedPassword)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
+		return
+	}
+	if !result {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(params.NewPassword)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't hash password", err)
 		return
 	}
 
-	user, err := cfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
+	user, err = cfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
 		ID:             userID,
 		Email:          params.Email,
 		HashedPassword: hashedPassword,

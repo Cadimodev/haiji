@@ -8,7 +8,7 @@ import {
     getUserProfileAuthed,
     updateUserProfileAuthed,
 } from "../services/authService";
-import { validateRegister } from "../utils/validation";
+import { validateUpdate } from "../utils/validation";
 import "../styles/AuthForm.css";
 
 function UserProfilePage() {
@@ -57,7 +57,8 @@ function UserProfilePage() {
         () => ({
             email: profileData?.email || "",
             username: profileData?.username || "",
-            password: "",
+            newPassword: "",
+            oldPassword: "",
         }),
         [profileData?.email, profileData?.username]
     );
@@ -69,7 +70,7 @@ function UserProfilePage() {
         handleChange,
         handleSubmit,
         setBackendError,
-    } = useAuthForm(initialValues, validateRegister);
+    } = useAuthForm(initialValues, validateUpdate);
 
     // Update perfil usando servicio authed (formato uniforme)
     const onSubmit = async () => {
@@ -92,7 +93,7 @@ function UserProfilePage() {
                 login(
                     data.username ?? user.username,
                     data.token ?? user.token,
-                    data.refresh_token ?? user.refreshToken
+                    data.refresh_token ?? user.refreshToken,
                 );
             }
 
@@ -137,13 +138,24 @@ function UserProfilePage() {
                     </div>
 
                     <div className="input-group">
-                        {errors.password && <div className="error-msg">{errors.password}</div>}
+                        {errors.newPassword && <div className="error-msg">{errors.newPassword}</div>}
                         <input
                             className="auth-form-input"
                             type="password"
-                            name="password"
+                            name="newPassword"
                             placeholder="New Password"
-                            value={values.password}
+                            value={values.newPassword}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className="input-group">
+                        {errors.oldPassword && <div className="error-msg">{errors.oldPassword}</div>}
+                        <input
+                            className="auth-form-input"
+                            type="password"
+                            name="oldPassword"
+                            placeholder="Current Password"
+                            value={values.oldPassword}
                             onChange={handleChange}
                         />
                     </div>

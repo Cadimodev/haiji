@@ -37,3 +37,36 @@ export function validateRegister(values) {
 
     return errors;
 }
+
+export function validateUpdate(values) {
+    const errors = {};
+    if (!values.email) {
+        errors.email = "Email is required";
+    }
+    else if (!/\S+@\S+\.\S+/.test(values.email)) {
+        errors.email = "Email is invalid";
+    }
+
+    if (!values.username) {
+        errors.username = "Username is required";
+    }
+    else if (/\s/.test(values.username)) {
+        errors.username = "Username must not contain spaces";
+    }
+
+    if (!values.newPassword) {
+        errors.newPassword = "Password is required";
+    }
+    else if (values.newPassword.length < 6) {
+        errors.newPassword = "Password must be at least 6 characters";
+    }
+
+    if (!values.oldPassword) {
+        errors.oldPassword = "Password is required";
+    }
+    else if (values.oldPassword.length < 6) {
+        errors.oldPassword = "Password must be at least 6 characters";
+    }
+
+    return errors;
+}
