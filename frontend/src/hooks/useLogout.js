@@ -1,12 +1,18 @@
-import { useCallback } from "react";
 import { useUser } from "../context/UserContext";
+import { revokeTokenRequest } from "../services/authService";
 
 export function useLogout() {
-    const { logout } = useUser();
+    const { user, logout } = useUser();
 
-    const handleLogout = useCallback(() => {
-        logout();
-    }, [logout]);
+    return async function doLogout() {
+        try {
+            if (user?.refreshToken) {
+                await revokeTokenRequest(user.refreshToken);
+            }
+        } catch (_) {
 
-    return handleLogout;
+        } finally {
+            logout();
+        }
+    };
 }

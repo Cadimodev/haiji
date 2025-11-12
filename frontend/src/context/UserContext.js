@@ -6,7 +6,6 @@ export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loadingUser, setLoadingUser] = useState(true);
 
-    // 🔹 Carga inicial del usuario (desde localStorage o backend)
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -19,20 +18,17 @@ export function UserProvider({ children }) {
         setLoadingUser(false);
     }, []);
 
-    // 🔹 Memoriza la función login
     const login = useCallback((username, token, refreshToken) => {
         const newUser = { username, token, refreshToken };
         setUser(newUser);
         localStorage.setItem("user", JSON.stringify(newUser));
     }, []);
 
-    // 🔹 Memoriza la función logout
     const logout = useCallback(() => {
         setUser(null);
         localStorage.removeItem("user");
     }, []);
 
-    // 🔹 Memoriza el value del contexto
     const value = useMemo(
         () => ({
             user,
@@ -46,7 +42,6 @@ export function UserProvider({ children }) {
     return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
-// 🔹 Custom hook para consumir el contexto
 export function useUser() {
     const context = useContext(UserContext);
     if (!context) {

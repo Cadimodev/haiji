@@ -36,3 +36,11 @@ export function updateUserProfileAuthed(fetcher, payload) {
         body: JSON.stringify(payload),
     });
 }
+
+export function revokeTokenRequest(refreshToken) {
+    return httpRequest("/api/revoke-token", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${refreshToken}` },
+    });
+}
+
