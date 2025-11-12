@@ -19,11 +19,11 @@ export function registerRequest({ email, username, password }) {
 export function refreshTokenRequest(refreshToken) {
     return httpRequest("/api/refresh-token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers: {
+            "Authorization": `Bearer ${refreshToken}`
+        }
     });
 }
-
 
 export function getUserProfileAuthed(fetcher) {
     return fetcher("/api/user-profile", { method: "GET" });

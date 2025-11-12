@@ -82,7 +82,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	ip, userAgent := utils.GetClientInfo(r)
 
-	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour)
+	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour, cfg.RefreshPepper)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
 		return
@@ -185,11 +185,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	// Revoke & generate new tokens
 	ip, userAgent := utils.GetClientInfo(r)
-	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(
-		r.Context(), cfg.DB, userID, userAgent, ip,
-		60*24*time.Hour,          // refresh TTL
-		cfg.JWTSecret, time.Hour, // access TTL
-	)
+	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(r.Context(), cfg.DB, userID, userAgent, ip, 60*24*time.Hour, cfg.JWTSecret, time.Hour, cfg.RefreshPepper)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't rotate session", err)
 		return

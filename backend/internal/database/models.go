@@ -13,14 +13,15 @@ import (
 )
 
 type RefreshToken struct {
-	ID        int64
-	UserID    uuid.UUID
-	Token     string
-	CreatedAt time.Time
-	ExpiresAt time.Time
-	RevokedAt sql.NullTime
-	UserAgent sql.NullString
-	Ip        pqtype.Inet
+	ID         int64
+	UserID     uuid.UUID
+	TokenHash  []byte
+	CreatedAt  time.Time
+	LastUsedAt sql.NullTime
+	ExpiresAt  time.Time
+	RevokedAt  sql.NullTime
+	UserAgent  sql.NullString
+	Ip         pqtype.Inet
 }
 
 type User struct {

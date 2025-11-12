@@ -11,11 +11,18 @@ import (
 	"github.com/google/uuid"
 )
 
-func IssueRefreshToken(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, ttl time.Duration) (string, error) {
-	rt := auth.MakeRefreshToken()
-	_, err := q.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
+func IssueRefreshToken(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, ttl time.Duration, refreshPepper []byte) (string, error) {
+
+	tokenHex, raw, err := auth.MakeRefreshTokenPair()
+	if err != nil {
+		return "", err
+	}
+
+	tokenHash := auth.HMACSHA256(raw, refreshPepper)
+
+	_, err = q.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
 		UserID:    userID,
-		Token:     rt,
+		TokenHash: tokenHash,
 		ExpiresAt: time.Now().UTC().Add(ttl),
 		UserAgent: sql.NullString{String: ua, Valid: ua != ""},
 		Ip:        database.ToInet(ip),
@@ -23,13 +30,13 @@ func IssueRefreshToken(ctx context.Context, q *database.Queries, userID uuid.UUI
 	if err != nil {
 		return "", err
 	}
-	return rt, nil
+	return tokenHex, nil
 }
 
-func RevokeAllAndIssueNewSession(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, refreshTTL time.Duration, jwtSecret string, accessTTL time.Duration) (access string, refresh string, err error) {
+func RevokeAllAndIssueNewSession(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, refreshTTL time.Duration, jwtSecret string, accessTTL time.Duration, refreshPepper []byte) (access string, refresh string, err error) {
 
 	_ = q.RevokeAllRefreshTokensForUser(ctx, userID)
-	refresh, err = IssueRefreshToken(ctx, q, userID, ua, ip, refreshTTL)
+	refresh, err = IssueRefreshToken(ctx, q, userID, ua, ip, refreshTTL, refreshPepper)
 	if err != nil {
 		return "", "", err
 	}

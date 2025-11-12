@@ -3,6 +3,8 @@ import { useUser } from "../context/UserContext";
 import { refreshTokenRequest } from "../services/authService";
 import { httpRequest } from "../utils/http";
 
+let globalRefreshPromise = null;
+
 function withAuth(init = {}, token) {
     return {
         ...init,
@@ -17,16 +19,28 @@ export function useAuthManager() {
     const { user, login, logout } = useUser();
 
     const tryRefresh = useCallback(async () => {
-        if (!user?.refreshToken) return null;
+        if (!user?.refreshToken) {
+            return null;
+        }
 
-        const { ok, data } = await refreshTokenRequest(user.refreshToken);
-        if (!ok || !data?.token) return null;
+        if (!globalRefreshPromise) {
+            globalRefreshPromise = (async () => {
 
-        const newToken = data.token;
-        const newRefresh = data.refresh_token ?? user.refreshToken;
+                const { ok, data } = await refreshTokenRequest(user.refreshToken);
+                globalRefreshPromise = null;
 
-        login(user.username, newToken, newRefresh);
-        return newToken;
+                if (!ok || !data?.token) {
+                    return null;
+                }
+
+                const newToken = data.token;
+                const newRefresh = data.refresh_token ?? user.refreshToken;
+                login(user.username, newToken, newRefresh);
+
+                return newToken;
+            })();
+        }
+        return await globalRefreshPromise;
     }, [user, login]);
 
     const fetchWithAuth = useCallback(

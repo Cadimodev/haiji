@@ -16,14 +16,22 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 		Token string `json:"token"`
 	}
 
-	refreshToken, err := auth.GetBearerToken(r.Header)
+	refreshTokenHex, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't find token", err)
+		return
 	}
 
-	user, err := cfg.DB.GetUserFromRefreshToken(r.Context(), refreshToken)
+	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, cfg.RefreshPepper)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Malformed token", err)
+		return
+	}
+
+	user, err := cfg.DB.GetUserFromRefreshTokenHash(r.Context(), hash)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't get user from refresh token", err)
+		return
 	}
 
 	accessToken, err := auth.MakeJWT(
@@ -33,6 +41,7 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 	)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't  validate token", err)
+		return
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, response{
@@ -42,13 +51,19 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 
 func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
-	refreshToken, err := auth.GetBearerToken(r.Header)
+	refreshTokenHex, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't find token", err)
 		return
 	}
 
-	err = cfg.DB.RevokeRefreshToken(r.Context(), refreshToken)
+	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, cfg.RefreshPepper)
+	if err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Malformed token", err)
+		return
+	}
+
+	err = cfg.DB.RevokeRefreshTokenByHash(r.Context(), hash)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't revoke session", err)
 		return

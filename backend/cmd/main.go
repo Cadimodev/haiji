@@ -32,6 +32,16 @@ func main() {
 		log.Fatal("PORT environment variable is not set")
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is not set")
+	}
+
+	refreshPepper := os.Getenv("REFRESH_PEPPER")
+	if refreshPepper == "" {
+		log.Fatal("REFRESH_PEPPER environment variable is not set")
+	}
+
 	filepathRoot := os.Getenv("FILEPATH_ROOT")
 	if filepathRoot == "" {
 		log.Fatal("FILEPATH_ROOT environment variable is not set")
@@ -54,11 +64,13 @@ func main() {
 	dbQueries := database.New(dbConn)
 
 	apiCFG := config.ApiConfig{
-		DB:           dbQueries,
-		Platform:     platform,
-		FilepathRoot: filepathRoot,
-		AssetsRoot:   assetsRoot,
-		Port:         port,
+		DB:            dbQueries,
+		JWTSecret:     jwtSecret,
+		Platform:      platform,
+		FilepathRoot:  filepathRoot,
+		AssetsRoot:    assetsRoot,
+		Port:          port,
+		RefreshPepper: []byte(refreshPepper),
 	}
 
 	mux := http.NewServeMux()

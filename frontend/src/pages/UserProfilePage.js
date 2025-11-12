@@ -15,15 +15,11 @@ function UserProfilePage() {
     const { user, login, loadingUser } = useUser();
     const handleLogout = useLogout();
     const navigate = useNavigate();
-
-    // Hook que añade Authorization y gestiona refresh on 401 (formato uniforme)
     const { fetchJsonWithAuth } = useAuthManager();
-
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Carga perfil con respuesta uniforme { ok, status, data, error }
     const loadProfile = useCallback(async () => {
         try {
             const { ok, data } = await getUserProfileAuthed(fetchJsonWithAuth);
@@ -41,7 +37,6 @@ function UserProfilePage() {
         }
     }, [fetchJsonWithAuth, handleLogout, navigate]);
 
-    // Guard: si no hay sesión cuando el contexto ya cargó, fuera
     useEffect(() => {
         if (loadingUser) return;
         if (!user?.token || !user?.refreshToken) {
@@ -52,7 +47,6 @@ function UserProfilePage() {
         loadProfile();
     }, [loadingUser, user, handleLogout, navigate, loadProfile]);
 
-    // Valores iniciales del formulario, memorizados
     const initialValues = useMemo(
         () => ({
             email: profileData?.email || "",
@@ -72,7 +66,6 @@ function UserProfilePage() {
         setBackendError,
     } = useAuthForm(initialValues, validateUpdate);
 
-    // Update perfil usando servicio authed (formato uniforme)
     const onSubmit = async () => {
         if (isSubmitting) return;
         setIsSubmitting(true);
@@ -93,7 +86,6 @@ function UserProfilePage() {
                 return;
             }
 
-            // Si el backend devuelve tokens nuevos al actualizar, persístelos
             if (data?.token || data?.refresh_token) {
                 login(
                     data.username ?? user.username,
@@ -103,7 +95,7 @@ function UserProfilePage() {
             }
 
             setBackendError("");
-            await loadProfile(); // refresca datos sin recargar la página
+            await loadProfile();
         } catch {
             setBackendError("Error connecting to server");
         } finally {

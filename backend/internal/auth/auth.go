@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -100,10 +102,27 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return splitAuth[1], nil
 }
 
-// MakeRefreshToken makes a random 256 bit token
-// encoded in hex
-func MakeRefreshToken() string {
-	token := make([]byte, 32)
-	rand.Read(token)
-	return hex.EncodeToString(token)
+// Genera 256 bits y devuelve: (hex para el cliente, bytes crudos)
+func MakeRefreshTokenPair() (plaintextHex string, raw []byte, err error) {
+	raw = make([]byte, 32)
+	if _, err = rand.Read(raw); err != nil {
+		return "", nil, err
+	}
+	return hex.EncodeToString(raw), raw, nil
+}
+
+// HMAC-SHA256 del token crudo. Si prefieres SHA-256 "a pelo", cambia esta función.
+func HMACSHA256(raw []byte, secret []byte) []byte {
+	mac := hmac.New(sha256.New, secret)
+	mac.Write(raw)
+	return mac.Sum(nil)
+}
+
+// Para cuando recibes el token en Bearer (en hex) y quieres su hash
+func HashPresentedRefreshHex(tokenHex string, secret []byte) ([]byte, error) {
+	raw, err := hex.DecodeString(tokenHex)
+	if err != nil {
+		return nil, err
+	}
+	return HMACSHA256(raw, secret), nil
 }
