@@ -25,6 +25,12 @@ func GetClientInfo(r *http.Request) (ip net.IP, ua string) {
 	}
 
 	if parsed := net.ParseIP(host); parsed != nil {
+		if ip4 := parsed.To4(); ip4 != nil {
+			return ip4, ua
+		}
+		if parsed.IsLoopback() {
+			return net.ParseIP("127.0.0.1"), ua
+		}
 		return parsed, ua
 	}
 	return nil, ua
