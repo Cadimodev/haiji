@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from "react";
+import { refreshTokenRequest } from "../services/authService";
 
 const UserContext = createContext();
 
@@ -8,14 +9,42 @@ export function UserProvider({ children }) {
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch {
-                localStorage.removeItem("user");
-            }
+
+        if (!storedUser) {
+            setLoadingUser(false);
+            return;
         }
-        setLoadingUser(false);
+
+        let parsed;
+        try {
+            parsed = JSON.parse(storedUser);
+        } catch {
+            localStorage.removeItem("user");
+            setLoadingUser(false);
+            return;
+        }
+
+        // try to make a silent refresh while mounting
+        (async () => {
+            const { ok, data } = await refreshTokenRequest(parsed.refreshToken);
+
+            if (!ok || !data?.token) {
+                localStorage.removeItem("user");
+                setUser(null);
+                setLoadingUser(false);
+                return;
+            }
+
+            const updated = {
+                username: parsed.username,
+                token: data.token,
+                refreshToken: data.refresh_token ?? parsed.refreshToken,
+            };
+
+            setUser(updated);
+            localStorage.setItem("user", JSON.stringify(updated));
+            setLoadingUser(false);
+        })();
     }, []);
 
     const login = useCallback((username, token, refreshToken) => {

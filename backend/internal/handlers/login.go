@@ -27,7 +27,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't decode parameters", err)
 		return
 	}
 
@@ -43,7 +43,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if !result {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", nil)
 		return
 	}
 

@@ -30,7 +30,7 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 
 	user, err := cfg.DB.GetUserFromRefreshTokenHash(r.Context(), hash)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't get user from refresh token", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid or expired refresh token", err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 		time.Hour,
 	)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't  validate token", err)
+		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't validate token", err)
 		return
 	}
 

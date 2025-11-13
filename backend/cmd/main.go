@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/handlers"
+	"github.com/Cadimodev/haiji/backend/internal/middleware"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -73,6 +75,10 @@ func main() {
 		RefreshPepper: []byte(refreshPepper),
 	}
 
+	// Rate limiters
+	loginLimiter := middleware.NewRateLimiter(5, time.Minute)
+	refreshLimiter := middleware.NewRateLimiter(60, time.Minute)
+
 	mux := http.NewServeMux()
 
 	// Static assets
@@ -100,12 +106,16 @@ func main() {
 	mux.HandleFunc("GET /api/user-profile", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerUserProfile(&apiCFG, w, r)
 	})
-	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerLogin(&apiCFG, w, r)
-	})
-	mux.HandleFunc("POST /api/refresh-token", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerRefreshToken(&apiCFG, w, r)
-	})
+	mux.Handle("POST /api/login",
+		loginLimiter.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handlers.HandlerLogin(&apiCFG, w, r)
+		})),
+	)
+	mux.Handle("POST /api/refresh-token",
+		refreshLimiter.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handlers.HandlerRefreshToken(&apiCFG, w, r)
+		})),
+	)
 	mux.HandleFunc("POST /api/revoke-token", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandlerRevokeToken(&apiCFG, w, r)
 	})
