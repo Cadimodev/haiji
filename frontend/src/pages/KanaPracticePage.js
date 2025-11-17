@@ -127,7 +127,7 @@ const MESSAGES = {
     poolUpdated: "List updated. Start typing.",
     correct: "Correct!",
     correctAnswers: "Correct answers",
-    incorrect: "Incorrect, try again.",
+    incorrect: "Incorrect. Correct answer:",
     selectAtLeastOne: "Select at least one group to practice.",
 };
 
@@ -172,7 +172,6 @@ function KanaPracticePage() {
         return selectedGroups.flatMap((id) => charGroups[id] || []);
     }, [checkedGroups]);
 
-    // Controla el reset de índice, mensaje, input y count al cambiar pool
     useEffect(() => {
         if (pool.length === 0) {
             setMessage(MESSAGES.selectAtLeastOne);
@@ -180,11 +179,21 @@ function KanaPracticePage() {
             setUserInput("");
             return;
         }
-        setCurrentIndex(Math.floor(Math.random() * pool.length));
+
+        // No tocamos currentIndex aquí, solo reseteamos mensaje/input/contador
         setMessage(MESSAGES.poolUpdated);
         setCount(0);
         setUserInput("");
     }, [pool]);
+
+    // Calcula un índice seguro dentro del rango del pool
+    const safeIndex =
+        pool.length === 0
+            ? -1
+            : Math.min(currentIndex, pool.length - 1);
+
+    const currentChar = safeIndex === -1 ? null : pool[safeIndex];
+
 
     // Forzar foco en input al montar
     useEffect(() => {
@@ -211,21 +220,30 @@ function KanaPracticePage() {
             const value = e.target.value;
             setUserInput(value);
 
-            if (pool.length === 0) return;
+            if (!currentChar) {
+                // No hay carácter actual (pool vacío, etc.)
+                return;
+            }
 
-            const currentChar = pool[currentIndex];
-            if (value.trim().toLowerCase() === currentChar.romanji) {
+            const normalized = value.trim().toLowerCase();
+
+            if (normalized === currentChar.romanji) {
+                // Acierto
                 setMessage(MESSAGES.correct);
                 setCount((c) => c + 1);
                 setUserInput("");
+                setShowRomanji(false);
                 setCurrentIndex((prev) => getRandomIndex(prev, pool.length));
-            } else if (value.length >= currentChar.romanji.length) {
-                setMessage(MESSAGES.incorrect);
+            } else if (normalized.length >= currentChar.romanji.length) {
+                // Fallo: mostramos romanji correcto
+                setMessage(`${MESSAGES.incorrect} ${currentChar.romanji}`);
+                setShowRomanji(true);
             } else {
+                // Todavía escribiendo
                 setMessage("");
             }
         },
-        [pool, currentIndex]
+        [currentChar, pool.length]
     );
 
     return (
@@ -233,19 +251,18 @@ function KanaPracticePage() {
             <div className="kana-main-box">
                 <div
                     className="kana-romanji-hover"
-                    style={{
-                        visibility: showRomanji ? "visible" : "hidden"
-                    }}
+                    style={{ visibility: showRomanji ? "visible" : "hidden" }}
                 >
-                    {pool.length > 0 ? pool[currentIndex].romanji : ""}
+                    {currentChar ? currentChar.romanji : ""}
                 </div>
                 <span
                     className="kana-large"
                     onMouseEnter={() => setShowRomanji(true)}
                     onMouseLeave={() => setShowRomanji(false)}
                 >
-                    {pool.length > 0 ? pool[currentIndex].kana : ""}
+                    {currentChar ? currentChar.kana : ""}
                 </span>
+
                 <input
                     type="text"
                     className="kana-input"
