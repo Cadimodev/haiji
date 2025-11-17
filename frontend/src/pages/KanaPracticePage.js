@@ -51,7 +51,7 @@ const charGroups = {
         { kana: "ほ", romanji: "ho" },
     ],
     hm: [
-        { kana: "は", romanji: "ma" },
+        { kana: "ま", romanji: "ma" },
         { kana: "み", romanji: "mi" },
         { kana: "む", romanji: "mu" },
         { kana: "め", romanji: "me" },

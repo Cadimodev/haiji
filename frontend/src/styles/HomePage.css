@@ -1,5 +1,3 @@
-/* Fondo general */
-
 .haiji-home {
     min-height: 100vh;
     background: #111111;
@@ -8,21 +6,16 @@
         sans-serif;
 }
 
-/* HERO */
-
 .hero {
     position: relative;
     min-height: 100vh;
     max-width: 1200px;
     margin: 0 auto;
-    /* texto más arriba que antes */
     padding: 90px 80px 120px;
     display: flex;
     align-items: flex-start;
     overflow: hidden;
 }
-
-/* Columna de texto (izquierda) */
 
 .hero-content {
     position: relative;
@@ -47,8 +40,6 @@
     font-size: 1.25rem;
     color: #b3a9a0;
 }
-
-/* Botón */
 
 .hero-cta {
     display: inline-flex;
@@ -78,23 +69,16 @@
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.7);
 }
 
-/* Fondo Fuji a la derecha */
-
 .hero-visual {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
-
     background-image: url("../assets/haiji-fuji.png");
     background-repeat: no-repeat;
-
-    /* un poco más pequeña y más baja para que se parezca al mockup */
     background-size: auto 95%;
     background-position: 120% 78%;
 }
-
-/* Degradado / vignette tipo mockup (debajo del texto y base de la montaña) */
 
 .hero-visual::after {
     content: "";
@@ -105,7 +89,6 @@
 
     background: radial-gradient(145% 145% at 45% 92%,
             rgba(0, 0, 0, 0.65) 0%,
-            /* más oscuro cerca del botón/texto */
             rgba(0, 0, 0, 0.45) 25%,
             rgba(0, 0, 0, 0.18) 55%,
             rgba(0, 0, 0, 0) 75%);
