@@ -71,6 +71,10 @@
     transition: all .15s ease;
 }
 
+.big {
+    width: 180px;
+}
+
 .submit-button::before,
 .submit-button::after {
     content: '';

@@ -13,6 +13,7 @@ function Navbar() {
                 <NavLink to="/" end className="btn-flip" data-back="ホーム" data-front="HOME" />
                 <NavLink to="/kana-chart" end className="btn-flip" data-back="グラフ" data-front="CHART" />
                 <NavLink to="/kana-practice" end className="btn-flip" data-back="練習" data-front="PRACTICE" />
+                <NavLink to="/kana-battle" end className="btn-flip" data-back="バトル" data-front="BATTLE" />
             </div>
             <div className="navbar-links-right">
                 {user

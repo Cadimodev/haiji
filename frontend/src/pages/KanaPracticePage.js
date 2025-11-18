@@ -159,14 +159,12 @@ function KanaPracticePage() {
     const [showRomanji, setShowRomanji] = useState(false);
     const inputRef = useRef(null);
 
-    // Generar pool con useMemo sin efectos secundarios
     const pool = useMemo(() => {
         const selectedGroups = Object.entries(checkedGroups)
             .filter(([_, checked]) => checked)
             .map(([id]) => id);
 
         if (selectedGroups.length === 0) {
-            // No actualizar estado aquí para evitar renderizados infinitos
             return charGroups["hsingle"];
         }
         return selectedGroups.flatMap((id) => charGroups[id] || []);
@@ -180,13 +178,11 @@ function KanaPracticePage() {
             return;
         }
 
-        // No tocamos currentIndex aquí, solo reseteamos mensaje/input/contador
         setMessage(MESSAGES.poolUpdated);
         setCount(0);
         setUserInput("");
     }, [pool]);
 
-    // Calcula un índice seguro dentro del rango del pool
     const safeIndex =
         pool.length === 0
             ? -1
@@ -194,8 +190,6 @@ function KanaPracticePage() {
 
     const currentChar = safeIndex === -1 ? null : pool[safeIndex];
 
-
-    // Forzar foco en input al montar
     useEffect(() => {
         if (inputRef.current) inputRef.current.focus();
     }, []);
@@ -204,7 +198,6 @@ function KanaPracticePage() {
         (id) => {
             setCheckedGroups((prev) => {
                 const newChecked = { ...prev, [id]: !prev[id] };
-                // Forzar at least one selected: si quedan todos false, selecciona hsingle y muestra mensaje
                 if (!Object.values(newChecked).some((v) => v)) {
                     newChecked.hsingle = true;
                     setMessage(MESSAGES.poolUpdated);
@@ -221,25 +214,21 @@ function KanaPracticePage() {
             setUserInput(value);
 
             if (!currentChar) {
-                // No hay carácter actual (pool vacío, etc.)
                 return;
             }
 
             const normalized = value.trim().toLowerCase();
 
             if (normalized === currentChar.romanji) {
-                // Acierto
                 setMessage(MESSAGES.correct);
                 setCount((c) => c + 1);
                 setUserInput("");
                 setShowRomanji(false);
                 setCurrentIndex((prev) => getRandomIndex(prev, pool.length));
             } else if (normalized.length >= currentChar.romanji.length) {
-                // Fallo: mostramos romanji correcto
                 setMessage(`${MESSAGES.incorrect} ${currentChar.romanji}`);
                 setShowRomanji(true);
             } else {
-                // Todavía escribiendo
                 setMessage("");
             }
         },
