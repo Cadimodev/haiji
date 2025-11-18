@@ -1,7 +1,49 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/AuthForm.css";
 import "../styles/KanaBattleLandingPage.css";
+
+const GROUP_IDS = [
+    "hsingle",
+    "hk",
+    "hs",
+    "ht",
+    "hn",
+    "hh",
+    "hm",
+    "hy",
+    "hr",
+    "hw",
+    "hn1",
+    "hg",
+    "hz",
+    "hd",
+    "hb",
+    "hp",
+];
+
+const GROUP_LABELS = {
+    hsingle: "あ-row",
+    hk: "か-row",
+    hs: "さ-row",
+    ht: "た-row",
+    hn: "な-row",
+    hh: "は-row",
+    hm: "ま-row",
+    hy: "や-row",
+    hr: "ら-row",
+    hw: "わ-row",
+    hn1: "ん",
+    hg: "が-row",
+    hz: "ざ-row",
+    hd: "だ-row",
+    hb: "ば-row",
+    hp: "ぱ-row",
+};
+
+
+const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht"];
+const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "hr"];
+const ALL_GROUPS = [...GROUP_IDS];
 
 function KanaBattleLandingPage() {
     const navigate = useNavigate();
@@ -10,27 +52,74 @@ function KanaBattleLandingPage() {
     const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
     const [duration, setDuration] = useState(60);
     const [selectedGroups, setSelectedGroups] = useState({
-        basic: true,
-        dakuten: false,
-        combo: false,
+        hsingle: true,
+        hk: false,
+        hs: false,
+        ht: false,
+        hn: false,
+        hh: false,
+        hm: false,
+        hy: false,
+        hr: false,
+        hw: false,
+        hn1: false,
+        hg: false,
+        hz: false,
+        hd: false,
+        hb: false,
+        hp: false,
     });
 
     const handleToggleGroup = (key) => {
-        setSelectedGroups((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
+        setSelectedGroups((prev) => {
+            const next = { ...prev, [key]: !prev[key] };
+            if (!Object.values(next).some(Boolean)) {
+                next.hsingle = true;
+            }
+
+            return next;
+        });
+    };
+
+    const applyPreset = (preset) => {
+        let active;
+        switch (preset) {
+            case "beginner":
+                active = new Set(BEGINNER_GROUPS);
+                break;
+            case "standard":
+                active = new Set(STANDARD_GROUPS);
+                break;
+            case "all":
+                active = new Set(ALL_GROUPS);
+                break;
+            default:
+                active = new Set(["hsingle"]);
+        }
+
+        const next = {};
+        GROUP_IDS.forEach((id) => {
+            next[id] = active.has(id);
+        });
+        setSelectedGroups(next);
     };
 
     const handleCreateRoom = (e) => {
         e.preventDefault();
 
-        // Aquí más adelante llamarás a tu backend:
-        // POST /api/kana-battle con { duration, selectedGroups }
+        const activeGroupIds = GROUP_IDS.filter((id) => selectedGroups[id]);
+
+        if (activeGroupIds.length === 0) {
+            // por seguridad extra, aunque el guard de arriba ya evita esto
+            alert("Please select at least one kana group.");
+            return;
+        }
+
+        // POST /api/kana-battle con { duration, groups: activeGroupIds }
         // y luego navigate(`/kana-battle/${code}`)
 
-        console.log("Create room with:", { duration, selectedGroups });
-        alert("TODO: conectar con backend para crear sala.");
+        console.log("Create room with:", { duration, groups: activeGroupIds });
+        alert("TODO: connect to backend to create a room with these groups (check console).");
     };
 
     const handleJoinRoom = (e) => {
@@ -45,8 +134,10 @@ function KanaBattleLandingPage() {
         // navigate(`/kana-battle/${trimmed}`);
 
         console.log("Join room:", trimmed);
-        alert(`TODO: conectar con backend para unirse a la sala ${trimmed}.`);
+        alert(`TODO: connect to backend to join room ${trimmed}.`);
     };
+
+    const selectedCount = GROUP_IDS.filter((id) => selectedGroups[id]).length;
 
     return (
         <main className="kana-battle-page">
@@ -67,10 +158,9 @@ function KanaBattleLandingPage() {
 
             <section className="kana-battle-main">
                 <div className="kana-battle-cards">
-                    {/* CREATE ROOM CARD */}
                     <article className="kana-battle-card">
                         <div className="kana-battle-card-header">
-                            <div className="kana-battle-card-label">Host</div>
+                            <div className="kana-battle-card-label">HOST</div>
                             <h2 className="kana-battle-card-title">Create Room</h2>
                             <p className="kana-battle-card-desc">
                                 Configure the kana groups, generate a room code, and invite your friends.
@@ -100,45 +190,69 @@ function KanaBattleLandingPage() {
                                     onClick={() => setShowAdvancedConfig((v) => !v)}
                                 >
                                     Kana groups
-                                    <span className={`kana-battle-config-icon ${showAdvancedConfig ? "open" : ""}`}>
+                                    <span className="kana-battle-config-selected">
+                                        {selectedCount} selected
+                                    </span>
+                                    <span
+                                        className={`kana-battle-config-icon ${showAdvancedConfig ? "open" : ""
+                                            }`}
+                                    >
                                         ▾
                                     </span>
                                 </button>
 
                                 {showAdvancedConfig && (
                                     <div className="kana-battle-groups">
-                                        <label className="kana-battle-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedGroups.basic}
-                                                onChange={() => handleToggleGroup("basic")}
-                                            />
-                                            <span className="kana-battle-checkbox-label">
-                                                Basic Hiragana (あ〜ん)
+                                        <div className="kana-battle-groups-presets">
+                                            <span className="kana-battle-groups-presets-label">
+                                                Preset:
                                             </span>
-                                        </label>
-                                        <label className="kana-battle-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedGroups.dakuten}
-                                                onChange={() => handleToggleGroup("dakuten")}
-                                            />
-                                            <span className="kana-battle-checkbox-label">
-                                                Dakuten (が, ざ, だ, ば, ぱ...)
-                                            </span>
-                                        </label>
-                                        <label className="kana-battle-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedGroups.combo}
-                                                onChange={() => handleToggleGroup("combo")}
-                                            />
-                                            <span className="kana-battle-checkbox-label">
-                                                Combinations (きゃ, しゃ, ちゃ...)
-                                            </span>
-                                        </label>
+                                            <button
+                                                type="button"
+                                                className="kana-battle-preset-btn"
+                                                onClick={() => applyPreset("beginner")}
+                                            >
+                                                Beginner
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="kana-battle-preset-btn"
+                                                onClick={() => applyPreset("standard")}
+                                            >
+                                                Standard
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="kana-battle-preset-btn"
+                                                onClick={() => applyPreset("all")}
+                                            >
+                                                All
+                                            </button>
+                                        </div>
+                                        <div className="kana-battle-group-grid">
+                                            {GROUP_IDS.map((id) => {
+                                                const active = !!selectedGroups[id];
+                                                return (
+                                                    <button
+                                                        key={id}
+                                                        type="button"
+                                                        className={
+                                                            "kana-battle-group-pill" +
+                                                            (active ? " active" : "")
+                                                        }
+                                                        onClick={() => handleToggleGroup(id)}
+                                                    >
+                                                        <span className="kana-battle-group-indicator" />
+                                                        <span className="kana-battle-group-label">
+                                                            {GROUP_LABELS[id] || id.toUpperCase()}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
                                         <p className="kana-battle-groups-hint">
-                                            You can map these options later to your existing practice groups.
+                                            These groups match the Hiragana groups used in the Practice page.
                                         </p>
                                     </div>
                                 )}
@@ -151,11 +265,9 @@ function KanaBattleLandingPage() {
                             </button>
                         </form>
                     </article>
-
-                    {/* JOIN ROOM CARD */}
                     <article className="kana-battle-card">
                         <div className="kana-battle-card-header">
-                            <div className="kana-battle-card-label player">Player</div>
+                            <div className="kana-battle-card-label player">PLAYER</div>
                             <h2 className="kana-battle-card-title">Join Room</h2>
                             <p className="kana-battle-card-desc">
                                 Enter the room code your friend shared and wait together in the lobby.
@@ -188,7 +300,6 @@ function KanaBattleLandingPage() {
                         </form>
                     </article>
                 </div>
-
                 <section className="kana-battle-how-it-works">
                     <h3 className="kana-battle-how-title">How it works</h3>
                     <ol className="kana-battle-how-list">
