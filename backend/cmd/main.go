@@ -124,9 +124,11 @@ func main() {
 	})
 
 	// DEV endpoints
-	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandlerReset(&apiCFG, w, r)
-	})
+	if platform == "dev" {
+		mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
+			handlers.HandlerReset(&apiCFG, w, r)
+		})
+	}
 
 	srv := &http.Server{
 		Addr:    ":" + port,
