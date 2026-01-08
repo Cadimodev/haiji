@@ -16,11 +16,12 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 		Token string `json:"token"`
 	}
 
-	refreshTokenHex, err := auth.GetBearerToken(r.Header)
+	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't find token", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "No refresh cookie found", err)
 		return
 	}
+	refreshTokenHex := cookie.Value
 
 	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, cfg.RefreshPepper)
 	if err != nil {
@@ -51,11 +52,13 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 
 func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
-	refreshTokenHex, err := auth.GetBearerToken(r.Header)
+	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't find token", err)
+		utils.ClearRefreshCookie(w)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+	refreshTokenHex := cookie.Value
 
 	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, cfg.RefreshPepper)
 	if err != nil {
@@ -69,6 +72,7 @@ func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	utils.ClearRefreshCookie(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 

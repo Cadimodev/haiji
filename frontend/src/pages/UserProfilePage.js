@@ -4,10 +4,7 @@ import { useUser } from "../context/UserContext";
 import { useAuthForm } from "../hooks/useAuthForm";
 import { useLogout } from "../hooks/useLogout";
 import { useAuthManager } from "../hooks/useAuthManager";
-import {
-    getUserProfileAuthed,
-    updateUserProfileAuthed,
-} from "../services/authService";
+import { getUserProfileAuthed, updateUserProfileAuthed } from "../services/authService";
 import { validateUpdate } from "../utils/validation";
 import "../styles/AuthForm.css";
 
@@ -38,8 +35,10 @@ function UserProfilePage() {
     }, [fetchJsonWithAuth, handleLogout, navigate]);
 
     useEffect(() => {
-        if (loadingUser) return;
-        if (!user?.token || !user?.refreshToken) {
+        if (loadingUser) {
+            return;
+        }
+        if (!user?.token) {
             handleLogout();
             navigate("/");
             return;
@@ -86,11 +85,10 @@ function UserProfilePage() {
                 return;
             }
 
-            if (data?.token || data?.refresh_token) {
+            if (data?.token) {
                 login(
                     data.username ?? user.username,
-                    data.token ?? user.token,
-                    data.refresh_token ?? user.refreshToken,
+                    data.token ?? user.token
                 );
             }
 

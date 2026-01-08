@@ -19,25 +19,20 @@ export function useAuthManager() {
     const { user, login, logout } = useUser();
 
     const tryRefresh = useCallback(async () => {
-        if (!user?.refreshToken) {
-            return null;
-        }
 
         if (!globalRefreshPromise) {
             globalRefreshPromise = (async () => {
 
-                const { ok, data } = await refreshTokenRequest(user.refreshToken);
+                const { ok, data } = await refreshTokenRequest();
                 globalRefreshPromise = null;
 
                 if (!ok || !data?.token) {
                     return null;
                 }
 
-                const newToken = data.token;
-                const newRefresh = data.refresh_token ?? user.refreshToken;
-                login(user.username, newToken, newRefresh);
+                login(user.username, data.token);
 
-                return newToken;
+                return data.token;
             })();
         }
         return await globalRefreshPromise;
@@ -51,20 +46,17 @@ export function useAuthManager() {
 
             let res = await doFetch(user.token);
 
-            if (res.status !== 401) return res;
+            if (res.status !== 401) {
+                return res;
+            }
 
-            if (!user.refreshToken) {
+            const refreshedToken = await tryRefresh();
+            if (!refreshedToken) {
                 logout();
                 return res;
             }
 
-            const refreshed = await tryRefresh();
-            if (!refreshed) {
-                logout();
-                return res;
-            }
-
-            res = await doFetch(refreshed);
+            res = await doFetch(refreshedToken);
 
             if (res.status === 401) {
                 logout();
@@ -86,18 +78,13 @@ export function useAuthManager() {
                 return { ...result, res: null };
             }
 
-            if (!user.refreshToken) {
+            const refreshedToken = await tryRefresh();
+            if (!refreshedToken) {
                 logout();
                 return { ...result, res: null };
             }
 
-            const refreshed = await tryRefresh();
-            if (!refreshed) {
-                logout();
-                return { ...result, res: null };
-            }
-
-            result = await httpRequest(input, withAuth(init, refreshed));
+            result = await httpRequest(input, withAuth(init, refreshedToken));
 
             if (result.status === 401) {
                 logout();

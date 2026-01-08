@@ -31,8 +31,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 	type response struct {
 		User
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
+		Token string `json:"token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -88,6 +87,8 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	utils.SetRefreshCookie(w, refreshToken)
+
 	utils.RespondWithJSON(w, http.StatusCreated, response{
 		User: User{
 			ID:        user.ID,
@@ -96,8 +97,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 			UpdatedAt: user.UpdatedAt,
 			Username:  user.Username,
 		},
-		Token:        accessToken,
-		RefreshToken: refreshToken,
+		Token: accessToken,
 	})
 }
 
@@ -111,8 +111,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 	type response struct {
 		User
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
+		Token string `json:"token"`
 	}
 
 	// Auth JWT
@@ -191,6 +190,8 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	utils.SetRefreshCookie(w, newRefresh)
+
 	utils.RespondWithJSON(w, http.StatusOK, response{
 		User: User{
 			ID:        user.ID,
@@ -199,8 +200,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 			Email:     user.Email,
 			Username:  user.Username,
 		},
-		Token:        newAccess,
-		RefreshToken: newRefresh,
+		Token: newAccess,
 	})
 }
 

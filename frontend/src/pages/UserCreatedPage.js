@@ -12,18 +12,16 @@ function UserCreatedPage() {
     useEffect(() => {
         if (loadingUser) return;
 
-        // Si ya hay sesión (por ejemplo, por localStorage tras refresh), listo
         if (user) {
             setFinalising(false);
             return;
         }
 
-        const payload = location.state; // { username, token, refresh }
+        const payload = location.state;
         if (payload?.token && payload?.username) {
-            login(payload.username, payload.token, payload.refresh ?? "");
+            login(payload.username, payload.token ?? "");
             setFinalising(false);
         } else {
-            // Acceso directo a la URL sin pasar por Register
             navigate("/register", { replace: true });
         }
     }, [loadingUser, user, location.state, login, navigate]);

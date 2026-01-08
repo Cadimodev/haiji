@@ -51,7 +51,6 @@ function RegisterPage() {
             state: {
                 username: data.username,
                 token: data.token,
-                refresh: data.refresh_token ?? "",
             },
         });
 

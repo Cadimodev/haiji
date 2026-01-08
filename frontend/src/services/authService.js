@@ -16,12 +16,9 @@ export function registerRequest({ email, username, password }) {
     });
 }
 
-export function refreshTokenRequest(refreshToken) {
+export function refreshTokenRequest() {
     return httpRequest("/api/refresh-token", {
         method: "POST",
-        headers: {
-            "Authorization": `Bearer ${refreshToken}`
-        }
     });
 }
 
@@ -37,10 +34,9 @@ export function updateUserProfileAuthed(fetcher, payload) {
     });
 }
 
-export function revokeTokenRequest(refreshToken) {
+export function revokeTokenRequest() {
     return httpRequest("/api/revoke-token", {
         method: "POST",
-        headers: { Authorization: `Bearer ${refreshToken}` },
     });
 }
 

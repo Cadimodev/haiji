@@ -1,6 +1,14 @@
 export async function httpRequest(url, options = {}) {
     try {
-        const res = await fetch(url, options);
+        const finalOptions = {
+            ...options,
+            credentials: "include",
+            headers: {
+                ...(options.headers || {}),
+            },
+        };
+
+        const res = await fetch(url, finalOptions);
         const contentType = res.headers.get("Content-Type") || "";
 
         let data = null;

@@ -19,8 +19,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 	}
 	type response struct {
 		User
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
+		Token string `json:"token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -65,6 +64,8 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	utils.SetRefreshCookie(w, refreshToken)
+
 	utils.RespondWithJSON(w, http.StatusOK, response{
 		User: User{
 			ID:        user.ID,
@@ -73,7 +74,6 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 			UpdatedAt: user.UpdatedAt,
 			Username:  user.Username,
 		},
-		Token:        accessToken,
-		RefreshToken: refreshToken,
+		Token: accessToken,
 	})
 }

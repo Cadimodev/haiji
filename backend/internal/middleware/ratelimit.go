@@ -3,7 +3,6 @@ package middleware
 import (
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -96,17 +95,19 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 // clientIP attempts to obtain the client's real IP address, taking proxies into account.
 func clientIP(r *http.Request) string {
 	// If its behind a reverse proxy (nginx, caddy, etc.)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		parts := strings.Split(xff, ",")
-		ip := strings.TrimSpace(parts[0])
-		if ip != "" {
-			return ip
+	/*
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			ip := strings.TrimSpace(parts[0])
+			if ip != "" {
+				return ip
+			}
 		}
-	}
 
-	if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
-		return xrip
-	}
+		if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
+			return xrip
+		}
+	*/
 
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

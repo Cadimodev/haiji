@@ -12,7 +12,6 @@ function LoginPage() {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Si ya hay sesión, saca del login (UX mejor; el guard también lo hará)
     useEffect(() => {
         if (!loadingUser && user) {
             navigate("/", { replace: true });
@@ -51,7 +50,7 @@ function LoginPage() {
             return;
         }
 
-        login(data.username, data.token, data.refresh_token ?? "");
+        login(data.username, data.token ?? "");
         navigate("/", { replace: true });
         setIsSubmitting(false);
     };
