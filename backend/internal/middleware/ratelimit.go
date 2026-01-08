@@ -3,6 +3,7 @@ package middleware
 import (
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,8 +18,9 @@ type tokenBucket struct {
 type RateLimiter struct {
 	mu         sync.Mutex
 	buckets    map[string]*tokenBucket
-	capacity   float64 // max tokens
-	refillRate float64 // tokens per second
+	capacity   float64       // max tokens
+	refillRate float64       // tokens per second
+	ttl        time.Duration // Lifespan of an unused entry
 }
 
 // maxRequests: maximum number of requests allowed in the given interval.
@@ -27,6 +29,7 @@ func NewRateLimiter(maxRequests int, per time.Duration) *RateLimiter {
 	if maxRequests <= 0 {
 		maxRequests = 1
 	}
+
 	if per <= 0 {
 		per = time.Minute
 	}
@@ -34,10 +37,30 @@ func NewRateLimiter(maxRequests int, per time.Duration) *RateLimiter {
 	// tokens per second (maxRequests / per)
 	refillRate := float64(maxRequests) / per.Seconds()
 
-	return &RateLimiter{
+	rl := &RateLimiter{
 		buckets:    make(map[string]*tokenBucket),
 		capacity:   float64(maxRequests),
 		refillRate: refillRate,
+		ttl:        per * 2,
+	}
+
+	go rl.startCleanup()
+	return rl
+}
+
+func (rl *RateLimiter) startCleanup() {
+
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		rl.mu.Lock()
+		for ip, bucket := range rl.buckets {
+			if time.Since(bucket.lastRefill) > rl.ttl {
+				delete(rl.buckets, ip)
+			}
+		}
+		rl.mu.Unlock()
 	}
 }
 
@@ -95,19 +118,18 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 // clientIP attempts to obtain the client's real IP address, taking proxies into account.
 func clientIP(r *http.Request) string {
 	// If its behind a reverse proxy (nginx, caddy, etc.)
-	/*
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			parts := strings.Split(xff, ",")
-			ip := strings.TrimSpace(parts[0])
-			if ip != "" {
-				return ip
-			}
-		}
 
-		if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
-			return xrip
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		parts := strings.Split(xff, ",")
+		ip := strings.TrimSpace(parts[0])
+		if ip != "" {
+			return ip
 		}
-	*/
+	}
+
+	if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
+		return xrip
+	}
 
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
