@@ -25,6 +25,7 @@ function UserProfilePage() {
                 navigate("/");
                 return;
             }
+
             setProfileData(data);
         } catch {
             handleLogout();
@@ -63,10 +64,14 @@ function UserProfilePage() {
         handleChange,
         handleSubmit,
         setBackendError,
+        resetForm
     } = useAuthForm(initialValues, validateUpdate);
 
     const onSubmit = async () => {
-        if (isSubmitting) return;
+        if (isSubmitting) {
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -94,6 +99,7 @@ function UserProfilePage() {
 
             setBackendError("");
             await loadProfile();
+            resetForm();
         } catch {
             setBackendError("Error connecting to server");
         } finally {
@@ -116,6 +122,7 @@ function UserProfilePage() {
                             className="auth-form-input"
                             type="text"
                             name="email"
+                            placeholder="Email"
                             value={values.email}
                             onChange={handleChange}
                         />
@@ -127,6 +134,7 @@ function UserProfilePage() {
                             className="auth-form-input"
                             type="text"
                             name="username"
+                            placeholder="Username"
                             value={values.username}
                             onChange={handleChange}
                         />

@@ -40,6 +40,13 @@ export function useAuthForm(initialValues, validate) {
         await submitCallback();
     };
 
+    const resetForm = () => {
+        isDirty.current = false;
+        setValues(initialValues);
+        setErrors({});
+        setBackendError("");
+    };
+
     return {
         values,
         errors,
@@ -47,5 +54,6 @@ export function useAuthForm(initialValues, validate) {
         handleChange,
         handleSubmit,
         setBackendError,
+        resetForm
     };
 }
