@@ -39,25 +39,27 @@ type Room struct {
 	HostID  uuid.UUID
 
 	// Lifecycle
-	register   chan *Client
-	unregister chan *Client
-	stopGame   chan bool
+	register     chan *Client
+	unregister   chan *Client
+	stopGame     chan bool
+	timeFinished chan bool
 }
 
 func NewRoom(code string, hub *Hub, duration int, groups []string, hostID uuid.UUID) *Room {
 	return &Room{
-		Code:       code,
-		Hub:        hub,
-		Clients:    make(map[*Client]bool),
-		Broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		Duration:   duration,
-		Groups:     groups,
-		State:      StateWaiting,
-		Players:    make(map[uuid.UUID]*Player),
-		stopGame:   make(chan bool),
-		HostID:     hostID,
+		Code:         code,
+		Hub:          hub,
+		Clients:      make(map[*Client]bool),
+		Broadcast:    make(chan []byte),
+		register:     make(chan *Client),
+		unregister:   make(chan *Client),
+		Duration:     duration,
+		Groups:       groups,
+		State:        StateWaiting,
+		Players:      make(map[uuid.UUID]*Player),
+		stopGame:     make(chan bool),
+		timeFinished: make(chan bool),
+		HostID:       hostID,
 	}
 }
 
@@ -118,6 +120,21 @@ func (r *Room) Run() {
 		case message := <-r.Broadcast:
 			r.broadcastToClients(message)
 
+		case <-r.timeFinished:
+			if r.State != StatePlaying {
+				continue
+			}
+			r.State = StateFinished
+			log.Printf("Game in room %s finished. Broadcasting results.", r.Code)
+			msg := map[string]interface{}{
+				"type":    "GAME_OVER",
+				"players": r.Players,
+			}
+			data, err := json.Marshal(msg)
+			if err == nil {
+				r.broadcastToClients(data)
+			}
+
 		case <-shutdownTimer.C:
 			log.Printf("Room %s grace period expired. Shutting down.", r.Code)
 			return
@@ -153,21 +170,11 @@ func (r *Room) startGame() {
 }
 
 func (r *Room) finishGame() {
-	// This is called from a goroutine, so strictly speaking modifying r.State is unsafe without lock or channel.
-	// However, for now let's assume it's "OK" or we should move this logic.
-	// Better practice: send a signal to Run loop to finish game.
-	// For now, let's keep it simple but safe:
-	// We CANNOT call broadcastToClients here safely because r.Clients is not mutexed.
-	// So we MUST use sendJSON (channel).
-	// BUT sendJSON was blocking.
-	// Since we increased channel buffer size, this should be fine now for external calls.
-
-	r.State = StateFinished
-	msg := map[string]interface{}{
-		"type":    "GAME_OVER",
-		"players": r.Players, // Send final scores
+	// Signal Run loop to finish game safely
+	select {
+	case r.timeFinished <- true:
+	default:
 	}
-	r.sendJSON(msg)
 }
 
 func (r *Room) handleRoomMessage(client *Client, msg []byte) {
