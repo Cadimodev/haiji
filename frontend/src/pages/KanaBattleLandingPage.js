@@ -1,44 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthManager } from "../hooks/useAuthManager";
 import "../styles/KanaBattleLandingPage.css";
-
-const GROUP_IDS = [
-    "hsingle",
-    "hk",
-    "hs",
-    "ht",
-    "hn",
-    "hh",
-    "hm",
-    "hy",
-    "hr",
-    "hw",
-    "hn1",
-    "hg",
-    "hz",
-    "hd",
-    "hb",
-    "hp",
-];
-
-const GROUP_LABELS = {
-    hsingle: "あ-row",
-    hk: "か-row",
-    hs: "さ-row",
-    ht: "た-row",
-    hn: "な-row",
-    hh: "は-row",
-    hm: "ま-row",
-    hy: "や-row",
-    hr: "ら-row",
-    hw: "わ-row",
-    hn1: "ん",
-    hg: "が-row",
-    hz: "ざ-row",
-    hd: "だ-row",
-    hb: "ば-row",
-    hp: "ぱ-row",
-};
+import { GROUP_IDS, GROUP_LABELS } from "../utils/kanaData";
 
 
 const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht"];
@@ -46,6 +10,7 @@ const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "h
 const ALL_GROUPS = [...GROUP_IDS];
 
 function KanaBattleLandingPage() {
+    const { fetchJsonWithAuth } = useAuthManager();
     const navigate = useNavigate();
 
     const [joinCode, setJoinCode] = useState("");
@@ -104,22 +69,29 @@ function KanaBattleLandingPage() {
         setSelectedGroups(next);
     };
 
-    const handleCreateRoom = (e) => {
+    const handleCreateRoom = async (e) => {
         e.preventDefault();
 
         const activeGroupIds = GROUP_IDS.filter((id) => selectedGroups[id]);
 
         if (activeGroupIds.length === 0) {
-            // por seguridad extra, aunque el guard de arriba ya evita esto
             alert("Please select at least one kana group.");
             return;
         }
 
-        // POST /api/kana-battle con { duration, groups: activeGroupIds }
-        // y luego navigate(`/kana-battle/${code}`)
+        const { ok, data } = await fetchJsonWithAuth("http://localhost:8080/api/kana-battle", {
+            method: "POST",
+            body: JSON.stringify({
+                duration,
+                groups: activeGroupIds
+            })
+        });
 
-        console.log("Create room with:", { duration, groups: activeGroupIds });
-        alert("TODO: connect to backend to create a room with these groups (check console).");
+        if (ok && data.code) {
+            navigate(`/kana-battle/${data.code}`);
+        } else {
+            alert("Failed to create room.");
+        }
     };
 
     const handleJoinRoom = (e) => {
@@ -130,11 +102,7 @@ function KanaBattleLandingPage() {
             return;
         }
 
-        // Más adelante: validar código con backend o directamente navegar
-        // navigate(`/kana-battle/${trimmed}`);
-
-        console.log("Join room:", trimmed);
-        alert(`TODO: connect to backend to join room ${trimmed}.`);
+        navigate(`/kana-battle/${trimmed}`);
     };
 
     const selectedCount = GROUP_IDS.filter((id) => selectedGroups[id]).length;

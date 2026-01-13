@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,8 +10,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
+	"github.com/Cadimodev/haiji/backend/internal/game"
 	"github.com/Cadimodev/haiji/backend/internal/handlers"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 
@@ -129,6 +132,64 @@ func main() {
 			handlers.HandlerReset(&apiCFG, w, r)
 		})
 	}
+
+	// Websocket
+	hub := game.NewHub()
+	go hub.Run()
+
+	mux.HandleFunc("POST /api/kana-battle", func(w http.ResponseWriter, r *http.Request) {
+		// Authenticate
+		tokenString := r.Header.Get("Authorization")
+		if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
+			tokenString = tokenString[7:]
+		}
+		userID, err := auth.ValidateJWT(tokenString, apiCFG.JWTSecret)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Parse body
+		type req struct {
+			Duration int      `json:"duration"`
+			Groups   []string `json:"groups"`
+		}
+		var params req
+		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		code := hub.CreateRoom(params.Duration, params.Groups, userID)
+
+		// Return code
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"code": code})
+	})
+
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		// Auth via Query Param (standard for WS)
+		tokenString := r.URL.Query().Get("token")
+		if tokenString == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := auth.ValidateJWT(tokenString, apiCFG.JWTSecret)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Retrieve username (optional, but good for display)
+		user, err := apiCFG.DB.GetUserByID(r.Context(), userID)
+		username := "Guest"
+		if err == nil {
+			username = user.Username
+		}
+
+		game.ServeWs(hub, w, r, userID, username)
+	})
 
 	srv := &http.Server{
 		Addr:    ":" + port,

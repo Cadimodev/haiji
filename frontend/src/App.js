@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import KanaChartPage from "./pages/KanaChartPage";
 import KanaPracticePage from "./pages/KanaPracticePage";
 import KanaBattleLandingPage from "./pages/KanaBattleLandingPage";
+import KanaBattlePage from "./pages/KanaBattlePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import UserCreatedPage from "./pages/UserCreatedPage";
@@ -23,6 +24,7 @@ function App() {
           <Route path="/kana-chart" element={<KanaChartPage />} />
           <Route path="/kana-practice" element={<KanaPracticePage />} />
           <Route path="/kana-battle" element={<KanaBattleLandingPage />} />
+          <Route path="/kana-battle/:roomCode" element={<KanaBattlePage />} />
           <Route
             path="/login"
             element={
