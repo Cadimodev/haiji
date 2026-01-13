@@ -23,14 +23,17 @@ export function UserProvider({ children }) {
             const { ok, data } = await refreshTokenRequest();
 
             if (ok && data?.token) {
-                const username = data.user?.username || parsedUser?.username || "User";
+                const userId = data.id || parsedUser?.id;
+                const username = data.username || parsedUser?.username || "User";
+
                 const updatedUser = {
+                    id: userId,
                     username: username,
                     token: data.token,
                 };
                 setUser(updatedUser);
 
-                localStorage.setItem("user", JSON.stringify({ username: updatedUser.username }));
+                localStorage.setItem("user", JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
             } else {
                 localStorage.removeItem("user");
                 setUser(null);
@@ -41,10 +44,10 @@ export function UserProvider({ children }) {
         initializeUser();
     }, []);
 
-    const login = useCallback((username, token) => {
-        const newUser = { username, token };
+    const login = useCallback((id, username, token) => {
+        const newUser = { id, username, token };
         setUser(newUser);
-        localStorage.setItem("user", JSON.stringify({ username }));
+        localStorage.setItem("user", JSON.stringify({ id, username }));
     }, []);
 
     const logout = useCallback(async () => {

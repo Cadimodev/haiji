@@ -183,12 +183,19 @@ function KanaBattlePage() {
                         {Object.values(players).map(p => (
                             <li key={p.userId} className="mb-2">
                                 <span className="font-bold">{p.username}</span>
-                                {hostId === p.userId && <span className="ml-2 text-yellow-400 text-sm">(Host)</span>}
+                                {String(hostId) === String(p.userId) && <span className="ml-2 text-yellow-400 text-sm">(Host)</span>}
                             </li>
                         ))}
                     </ul>
 
-                    {user && hostId && user.id === hostId && (
+                    {/* Debug Info */}
+                    <div className="text-xs text-gray-500 mb-4">
+                        <p>User ID: {user?.id} ({typeof user?.id})</p>
+                        <p>Host ID: {hostId} ({typeof hostId})</p>
+                        <p>Match: {String(user?.id) === String(hostId) ? "YES" : "NO"}</p>
+                    </div>
+
+                    {user && hostId && String(user.id) === String(hostId) && (
                         <button
                             onClick={handleStartGame}
                             disabled={Object.keys(players).length < 2}
@@ -199,7 +206,7 @@ function KanaBattlePage() {
                             {Object.keys(players).length < 2 ? "Waiting for players..." : "Start Battle"}
                         </button>
                     )}
-                    {!(user && hostId && user.id === hostId) && (
+                    {!(user && hostId && String(user.id) === String(hostId)) && (
                         <div className="text-gray-400 text-center italic">Waiting for host to start...</div>
                     )}
                 </div>

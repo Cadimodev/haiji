@@ -50,7 +50,7 @@ function LoginPage() {
             return;
         }
 
-        login(data.username, data.token ?? "");
+        login(data.id, data.username, data.token ?? "");
         navigate("/", { replace: true });
         setIsSubmitting(false);
     };

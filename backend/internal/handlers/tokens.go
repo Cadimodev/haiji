@@ -13,6 +13,7 @@ import (
 func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type response struct {
+		User
 		Token string `json:"token"`
 	}
 
@@ -46,6 +47,13 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, response{
+		User: User{
+			ID:        user.ID,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Username:  user.Username,
+		},
 		Token: accessToken,
 	})
 }
