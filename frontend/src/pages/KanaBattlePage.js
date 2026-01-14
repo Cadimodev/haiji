@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { charGroups, getRandomIndex } from "../utils/kanaData";
 import "../styles/KanaBattleLandingPage.css"; // Reuse for now
+import "../styles/KanaPracticePage.css"; // Reuse card styles
+import "../styles/KanaBattlePage.css"; // Specific Battle styles
 
 function KanaBattlePage() {
     const { roomCode } = useParams();
@@ -21,11 +23,12 @@ function KanaBattlePage() {
     // Socket
     const socketRef = useRef(null);
 
-    // Game Logic State (Similar to Practice)
+    // Game Logic State
     const [definitions, setDefinitions] = useState([]); // Array of {kana, romanji}
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userInput, setUserInput] = useState("");
     const [score, setScore] = useState(0);
+    const [showRomanji, setShowRomanji] = useState(false); // Hover state
 
     const inputRef = useRef(null);
 
@@ -162,6 +165,7 @@ function KanaBattlePage() {
             const newScore = score + 1;
             setScore(newScore);
             setUserInput("");
+            setShowRomanji(false);
             submitScore(newScore);
             setCurrentIndex(getRandomIndex(currentIndex, definitions.length));
         }
@@ -172,7 +176,7 @@ function KanaBattlePage() {
 
     return (
         <div className="kana-battle-page">
-            <h1 className="text-center text-3xl font-bold py-4 text-white">Room: {roomCode}</h1>
+            <h1 className="battle-room-header">Room: {roomCode}</h1>
 
             {gameState === "CONNECTING" && <div className="text-white text-center">Connecting...</div>}
 
@@ -213,35 +217,64 @@ function KanaBattlePage() {
             )}
 
             {gameState === "PLAYING" && (
-                <div className="flex flex-col items-center">
-                    <div className="text-6xl font-bold text-white mb-4">{timeLeft}s</div>
-                    <div className="text-2xl text-pink-400 mb-8">Score: {score}</div>
-
-                    <div className="bg-white p-12 rounded-xl shadow-2xl mb-8 flex flex-col items-center">
-                        <div className="text-9xl mb-8">
-                            {definitions[currentIndex]?.kana}
+                <div className="kana-battle-playing-container">
+                    {/* Reusing class names from KanaPracticePage.css for the Card */}
+                    {/* Header for Timer and Score */}
+                    <div className="battle-info-container">
+                        <div className="battle-timer">
+                            <span className="label">Time</span>
+                            <span className="value">{timeLeft}s</span>
                         </div>
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={userInput}
-                            onChange={handleInputChange}
-                            autoFocus
-                            className="text-4xl border-2 border-gray-300 rounded p-4 text-center w-64 focus:border-pink-500 outline-none"
-                        />
+                        <div className="battle-score">
+                            <span className="label">Score</span>
+                            <span className="value">{score}</span>
+                        </div>
                     </div>
 
-                    {/* Live Leaderboard */}
-                    <div className="w-64 bg-gray-900 bg-opacity-80 p-4 rounded text-white">
-                        <h3 className="font-bold border-b border-gray-600 pb-2 mb-2">Live Ranking</h3>
-                        {Object.values(players)
-                            .sort((a, b) => b.score - a.score)
-                            .map((p, i) => (
-                                <div key={p.userId} className="flex justify-between">
-                                    <span>{i + 1}. {p.username}</span>
-                                    <span>{p.score}</span>
+                    {/* Main Card */}
+                    <div className="kana-practice-card battle-card">
+                        <div className="kana-card-content">
+
+                            <div className="kana-display-area">
+                                {/* No Romanji Hint in Battle Mode */}
+                                <div className="kana-large">
+                                    {definitions[currentIndex]?.kana}
                                 </div>
-                            ))}
+                            </div>
+
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                className="kana-input"
+                                value={userInput}
+                                onChange={handleInputChange}
+                                autoFocus
+                                placeholder="Type Romanji..."
+                            />
+
+                            <div className="kana-message-area">
+                                {/* Using this space for simple feedback or empty */}
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {/* Live Leaderboard */}
+                    <div className="battle-leaderboard-container">
+                        <h3 className="leaderboard-title">Live Ranking</h3>
+                        <div className="leaderboard-list">
+                            {Object.values(players)
+                                .sort((a, b) => b.score - a.score)
+                                .map((p, i) => (
+                                    <div key={p.userId} className={`leaderboard-item ${i === 0 ? 'top-rank' : ''}`}>
+                                        <div className="rank-info">
+                                            <span className={`rank-number ${i === 0 ? 'gold' : ''}`}>{i + 1}</span>
+                                            <span className="player-name">{p.username}</span>
+                                        </div>
+                                        <span className="player-score">{p.score}</span>
+                                    </div>
+                                ))}
+                        </div>
                     </div>
                 </div>
             )}

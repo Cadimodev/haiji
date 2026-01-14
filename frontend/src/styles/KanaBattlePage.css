@@ -1,0 +1,156 @@
+/* Inherits some variables/styles from KanaPracticePage.css if imported globally or in parent */
+
+.battle-room-header {
+    text-align: center;
+    font-size: 1.875rem;
+    /* 3xl */
+    line-height: 2.25rem;
+    font-weight: 700;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    color: #e5e7eb;
+    /* gray-200 */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.kana-battle-playing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Battle Stats (Timer & Score) */
+.battle-info-container {
+    display: flex;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 420px;
+    margin-bottom: 1rem;
+    padding: 1rem 2rem;
+    background: #1e1e1e;
+    /* Match leaderboard */
+    border: 1px solid #333;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.battle-timer,
+.battle-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.battle-timer .label,
+.battle-score .label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.battle-timer .value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #fbbf24;
+    /* Goldish for time */
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+.battle-score .value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #ec4899;
+    /* Pink-500 */
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+}
+
+/* Override/Adjust Card for Battle */
+.battle-card {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    padding-top: 1.5rem;
+}
+
+/* Leaderboard */
+.battle-leaderboard-container {
+    background: #1e1e1e;
+    /* Slightly lighter than background */
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.8rem;
+    background: #252525;
+    border-radius: 6px;
+    transition: transform 0.2s;
+}
+
+.leaderboard-item:hover {
+    background: #2a2a2a;
+}
+
+.leaderboard-item.top-rank {
+    background: linear-gradient(90deg, #252525 0%, #3a3a3a 100%);
+    border: 1px solid #444;
+}
+
+.rank-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rank-number {
+    font-weight: 700;
+    color: #666;
+    width: 20px;
+    text-align: center;
+}
+
+.top-rank .rank-number {
+    color: #fbbf24;
+    /* Goldish */
+}
+
+.player-name {
+    color: #eee;
+    font-weight: 500;
+}
+
+.player-score {
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: #ec4899;
+}
