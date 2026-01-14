@@ -1,109 +1,228 @@
 body,
 .kana-practice-container {
-    background: #222;
+    background: #1a1a1a;
     color: #eee;
     min-height: 100vh;
+    font-family: 'Inter', sans-serif;
 }
 
-.kana-main-box {
-    background: #222;
-    border: 2px solid #333;
+/* Main Card Style */
+.kana-practice-card {
+    background: #252525;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 420px;
+    margin: 3rem auto;
+    padding: 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2rem 0;
-    margin-right: auto;
-    margin-bottom: auto;
-    margin-left: auto;
-    width: 90%;
-    max-width: 600px;
-    border-radius: 6px;
+    position: relative;
+    border: 1px solid #333;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kana-practice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+.kana-card-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Display Area (Kana + Romanji) */
+.kana-display-area {
+    position: relative;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.kana-romanji-hint {
+    font-size: 2rem;
+    color: #e96b6b;
+    background: #1e1e1e;
+    padding: 4px 12px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+}
+
+.kana-romanji-hint.visible {
+    opacity: 1;
+    transform: translateY(-20px);
 }
 
 .kana-large {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
+    font-size: 8rem;
     color: #fff;
+    line-height: 1;
+    cursor: default;
+    transition: color 0.3s ease;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.kana-large:hover {
+    color: #f0f0f0;
+}
+
+/* Input Field */
 .kana-input {
-    width: 70%;
-    font-size: 1.3rem;
-    margin-top: 1rem;
-    padding: .6em .8em;
-    border: 1px solid #888;
-    border-radius: 3px;
-    background: #181818;
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 12px 16px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background: #111;
     color: #fff;
     text-align: center;
+    transition: all 0.2s ease;
+    outline: none;
 }
 
-.tableKana {
-    border-collapse: collapse;
-    margin: 1.5em auto;
-    font-size: 1.15em;
+.kana-input:focus {
+    border-color: #555;
+    background: #000;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
 }
 
-.tableKana th,
-.tableKana td {
-    border: 1px solid #444;
-    padding: 4px 6px;
+.kana-input::placeholder {
+    color: #444;
+    font-size: 1rem;
+}
+
+/* Message Area */
+.kana-message-area {
+    min-height: 24px;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+    font-weight: 500;
     text-align: center;
-    min-width: 32px;
-    background: #222;
-    color: #eee;
-    font-size: 1em;
-}
-
-.tableKana th {
-    background: #333;
-}
-
-.kanacheck {
-    margin-bottom: 4px;
-    transform: scale(1.05);
-    accent-color: #09f;
-}
-
-.kana {
-    font-size: 1.18em;
-}
-
-.romaji {
-    font-size: 0.8em;
-}
-
-.kana-romanji-hover {
-    color: #ededed;
-    font-size: 1.6rem;
-    text-align: center;
-    margin: 0.5em 0 0.5em 0;
-    opacity: 0.85;
-    letter-spacing: 1px;
-}
-
-.kana-message {
-    margin: 1em 0 0.3em 0;
-    min-height: 1.2em;
     color: #ec7279;
-    font-weight: bold;
+    /* Redish by default for errors */
 }
 
-.kana-count {
-    margin-bottom: 1em;
-    font-size: 1.1em;
-    color: #c5e478;
+/* Stats Bar */
+.kana-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
 }
 
-.kana-table-title {
-    margin-bottom: 0.6em;
-    text-align: center;
-    font-size: 1.25em;
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
 }
 
+.stat-label {
+    color: #888;
+    font-weight: 400;
+}
+
+.stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.stat-item.correct .stat-value {
+    color: #4ade80;
+    /* Green */
+}
+
+.stat-item.incorrect .stat-value {
+    color: #f87171;
+    /* Red */
+}
+
+.stat-divider {
+    color: #333;
+    font-weight: 300;
+}
+
+/* Table Styles (Darker & Cleaner) */
 .kana-table-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 2em;
+    margin-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+.kana-table-title {
+    margin-bottom: 1.5em;
+    text-align: center;
+    font-size: 1.5em;
+    color: #aaa;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.tableKana {
+    border-collapse: separate;
+    border-spacing: 4px;
+    margin: 0 auto;
+}
+
+.tableKana th,
+.tableKana td {
+    border: none;
+    background: #252525;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    min-width: 48px;
+    color: #eee;
+    transition: background 0.2s;
+}
+
+.tableKana td:hover {
+    background: #303030;
+}
+
+.tableKana th {
+    background: transparent;
+}
+
+.kanacheck {
+    transform: scale(1.2);
+    accent-color: #fff;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.kanacheck:checked {
+    opacity: 1;
+}
+
+.kana {
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.romaji {
+    font-size: 0.75em;
+    color: #777;
+    display: block;
+    margin-top: 2px;
 }

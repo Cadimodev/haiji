@@ -45,6 +45,8 @@ function KanaPracticePage() {
     const [showRomanji, setShowRomanji] = useState(false);
     const inputRef = useRef(null);
 
+    const [incorrectCount, setIncorrectCount] = useState(0);
+
     const pool = useMemo(() => {
         const selectedGroups = Object.entries(checkedGroups)
             .filter(([_, checked]) => checked)
@@ -60,12 +62,14 @@ function KanaPracticePage() {
         if (pool.length === 0) {
             setMessage(MESSAGES.selectAtLeastOne);
             setCount(0);
+            setIncorrectCount(0);
             setUserInput("");
             return;
         }
 
         setMessage(MESSAGES.poolUpdated);
         setCount(0);
+        setIncorrectCount(0);
         setUserInput("");
     }, [pool]);
 
@@ -106,13 +110,16 @@ function KanaPracticePage() {
             const normalized = value.trim().toLowerCase();
 
             if (normalized === currentChar.romanji) {
+                // Correct answer
                 setMessage(MESSAGES.correct);
                 setCount((c) => c + 1);
                 setUserInput("");
                 setShowRomanji(false);
                 setCurrentIndex((prev) => getRandomIndex(prev, pool.length));
             } else if (normalized.length >= currentChar.romanji.length) {
+                // Incorrect answer (full length)
                 setMessage(`${MESSAGES.incorrect} ${currentChar.romanji}`);
+                setIncorrectCount((c) => c + 1);
                 setShowRomanji(true);
             } else {
                 setMessage("");
@@ -123,34 +130,48 @@ function KanaPracticePage() {
 
     return (
         <div className="kana-practice-container">
-            <div className="kana-main-box">
-                <div
-                    className="kana-romanji-hover"
-                    style={{ visibility: showRomanji ? "visible" : "hidden" }}
-                >
-                    {currentChar ? currentChar.romanji : ""}
-                </div>
-                <span
-                    className="kana-large"
-                    onMouseEnter={() => setShowRomanji(true)}
-                    onMouseLeave={() => setShowRomanji(false)}
-                >
-                    {currentChar ? currentChar.kana : ""}
-                </span>
+            <div className="kana-practice-card">
+                <div className="kana-card-content">
+                    <div className="kana-display-area">
+                        <div
+                            className={`kana-romanji-hint ${showRomanji ? "visible" : ""}`}
+                        >
+                            {currentChar ? currentChar.romanji : ""}
+                        </div>
+                        <div
+                            className="kana-large"
+                            onMouseEnter={() => setShowRomanji(true)}
+                            onMouseLeave={() => setShowRomanji(false)}
+                        >
+                            {currentChar ? currentChar.kana : "?"}
+                        </div>
+                    </div>
 
-                <input
-                    type="text"
-                    className="kana-input"
-                    ref={inputRef}
-                    autoFocus
-                    value={userInput}
-                    onChange={handleInputChange}
-                />
-                <div className="kana-message">
-                    {message}
-                </div>
-                <div className="kana-count">
-                    {MESSAGES.correctAnswers}: {count}
+                    <input
+                        type="text"
+                        className="kana-input"
+                        ref={inputRef}
+                        autoFocus
+                        value={userInput}
+                        onChange={handleInputChange}
+                        placeholder="Type Romanji..."
+                    />
+
+                    <div className="kana-message-area">
+                        {message}
+                    </div>
+
+                    <div className="kana-stats-bar">
+                        <div className="stat-item correct">
+                            <span className="stat-label">Correct:</span>
+                            <span className="stat-value">{count}</span>
+                        </div>
+                        <div className="stat-divider">|</div>
+                        <div className="stat-item incorrect">
+                            <span className="stat-label">Incorrect:</span>
+                            <span className="stat-value">{incorrectCount}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="kana-table-container">
