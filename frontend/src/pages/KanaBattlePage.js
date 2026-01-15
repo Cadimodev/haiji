@@ -181,38 +181,32 @@ function KanaBattlePage() {
             {gameState === "CONNECTING" && <div className="text-white text-center">Connecting...</div>}
 
             {gameState === "LOBBY" && (
-                <div className="max-w-md mx-auto bg-gray-800 p-8 rounded-lg shadow-lg">
-                    <h2 className="text-xl text-white mb-4">Players Connected:</h2>
-                    <ul className="text-white mb-8">
-                        {Object.values(players).map(p => (
-                            <li key={p.userId} className="mb-2">
-                                <span className="font-bold">{p.username}</span>
-                                {String(hostId) === String(p.userId) && <span className="ml-2 text-yellow-400 text-sm">(Host)</span>}
-                            </li>
-                        ))}
-                    </ul>
+                <div className="lobby-container">
+                    <div className="lobby-card">
+                        <h2 className="lobby-title">Players Connected</h2>
+                        <ul className="lobby-player-list">
+                            {Object.values(players).map(p => (
+                                <li key={p.userId} className="lobby-player-item">
+                                    <span className="lobby-player-name">{p.username}</span>
+                                    {String(hostId) === String(p.userId) && <span className="lobby-host-badge">Host</span>}
+                                </li>
+                            ))}
+                        </ul>
 
-                    {/* Debug Info */}
-                    <div className="text-xs text-gray-500 mb-4">
-                        <p>User ID: {user?.id} ({typeof user?.id})</p>
-                        <p>Host ID: {hostId} ({typeof hostId})</p>
-                        <p>Match: {String(user?.id) === String(hostId) ? "YES" : "NO"}</p>
+                        <div className="lobby-actions">
+                            {user && hostId && String(user.id) === String(hostId) ? (
+                                <button
+                                    onClick={handleStartGame}
+                                    disabled={Object.keys(players).length < 2}
+                                    className="lobby-start-btn"
+                                >
+                                    {Object.keys(players).length < 2 ? "Waiting for players..." : "Start Battle"}
+                                </button>
+                            ) : (
+                                <div className="lobby-wait-msg">Waiting for host to start...</div>
+                            )}
+                        </div>
                     </div>
-
-                    {user && hostId && String(user.id) === String(hostId) && (
-                        <button
-                            onClick={handleStartGame}
-                            disabled={Object.keys(players).length < 2}
-                            className={`w-full font-bold py-2 px-4 rounded ${Object.keys(players).length < 2
-                                ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                                : 'bg-pink-500 hover:bg-pink-600 text-white'}`}
-                        >
-                            {Object.keys(players).length < 2 ? "Waiting for players..." : "Start Battle"}
-                        </button>
-                    )}
-                    {!(user && hostId && String(user.id) === String(hostId)) && (
-                        <div className="text-gray-400 text-center italic">Waiting for host to start...</div>
-                    )}
                 </div>
             )}
 
@@ -280,27 +274,27 @@ function KanaBattlePage() {
             )}
 
             {gameState === "FINISHED" && (
-                <div className="max-w-md mx-auto bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-                    <h2 className="text-3xl text-white mb-8">Game Over!</h2>
-                    <div className="space-y-4">
-                        {Object.values(players)
-                            .sort((a, b) => b.score - a.score)
-                            .map((p, i) => (
-                                <div key={p.userId} className={`flex justify-between p-4 rounded ${i === 0 ? 'bg-yellow-600' : 'bg-gray-700'} text-white`}>
-                                    <div className="flex items-center">
-                                        <span className="text-xl font-bold mr-4">#{i + 1}</span>
-                                        <span className="text-lg">{p.username}</span>
+                <div className="game-over-container">
+                    <div className="game-over-card">
+                        <h2 className="game-over-title">Game Over!</h2>
+                        <div className="results-list">
+                            {Object.values(players)
+                                .sort((a, b) => b.score - a.score)
+                                .map((p, i) => (
+                                    <div key={p.userId} className={`result-item ${i === 0 ? 'winner' : ''}`}>
+                                        <div className="result-rank">#{i + 1}</div>
+                                        <div className="result-username">{p.username}</div>
+                                        <div className="result-score">{p.score}</div>
                                     </div>
-                                    <span className="text-2xl font-bold">{p.score}</span>
-                                </div>
-                            ))}
+                                ))}
+                        </div>
+                        <button
+                            onClick={() => navigate("/kana-battle")}
+                            className="game-over-btn"
+                        >
+                            Back to Lobby
+                        </button>
                     </div>
-                    <button
-                        onClick={() => navigate("/kana-battle")}
-                        className="mt-8 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Back to Lobby
-                    </button>
                 </div>
             )}
         </div>

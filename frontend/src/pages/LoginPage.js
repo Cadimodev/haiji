@@ -73,6 +73,7 @@ function LoginPage() {
                             value={values.username}
                             onChange={handleChange}
                             autoComplete="username"
+                            autoFocus
                         />
                     </div>
 

@@ -154,3 +154,219 @@
     font-size: 1.1rem;
     color: #ec4899;
 }
+
+/* Lobby Styles */
+.lobby-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.lobby-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.lobby-title {
+    font-size: 1.5rem;
+    color: #e5e7eb;
+    /* gray-200 */
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+.lobby-player-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.lobby-player-item {
+    background: #252525;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #333;
+    transition: background 0.2s;
+}
+
+.lobby-player-item:hover {
+    background: #2a2a2a;
+}
+
+.lobby-player-name {
+    color: #fff;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.lobby-host-badge {
+    background: #fbbf24;
+    /* Goldish */
+    color: #111;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.lobby-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.lobby-start-btn {
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    background: #ec4899;
+    /* Pink-500 */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.lobby-start-btn:hover:not(:disabled) {
+    background: #db2777;
+    /* Pink-600 */
+    transform: translateY(-1px);
+}
+
+.lobby-start-btn:disabled {
+    background: #4b5563;
+    /* Gray-600 */
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.lobby-wait-msg {
+    color: #9ca3af;
+    /* Gray-400 */
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+/* Game Over Styles */
+.game-over-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.game-over-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.game-over-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #252525;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.result-item.winner {
+    background: linear-gradient(90deg, #252525 0%, #3a3a3a 100%);
+    border: 1px solid #fbbf24;
+    /* Gold border */
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+    transform: scale(1.02);
+}
+
+.result-rank {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #666;
+    margin-right: 1rem;
+    width: 30px;
+    text-align: center;
+}
+
+.result-item.winner .result-rank {
+    color: #fbbf24;
+    /* Gold */
+}
+
+.result-username {
+    font-size: 1.2rem;
+    color: #eee;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: left;
+}
+
+.result-score {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: monospace;
+    color: #ec4899;
+    /* Pink */
+}
+
+.game-over-btn {
+    background: #4b5563;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.game-over-btn:hover {
+    background: #374151;
+    transform: translateY(-1px);
+}

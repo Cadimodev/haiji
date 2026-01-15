@@ -249,24 +249,3 @@ func (r *Room) broadcastToClients(message []byte) {
 		}
 	}
 }
-
-func (r *Room) sendJSON(v interface{}) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		log.Println("Error marshalling:", err)
-		return
-	}
-	// IMPORTANT: Non-blocking send or direct call if inside loop?
-	// If called from handleRoomMessage (which is called by Client readPump),
-	// we MUST send to channel to be thread safe with Room.Run state.
-	// If called from Room.Run methods (startGame, finishGame), we are in the loop.
-
-	// However, to keep it simple and avoid deadlock, we can use a buffered channel
-	// (we changed NewRoom) AND ensure we don't block forever.
-
-	select {
-	case r.Broadcast <- data:
-	default:
-		log.Println("Room broadcast channel full, dropping message")
-	}
-}

@@ -146,6 +146,7 @@ function UserProfilePage() {
                             className="auth-form-input"
                             type="password"
                             name="newPassword"
+                            autoFocus
                             placeholder="New Password"
                             value={values.newPassword}
                             onChange={handleChange}

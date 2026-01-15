@@ -73,6 +73,7 @@ function RegisterPage() {
                             value={values.email}
                             onChange={handleChange}
                             autoComplete="email"
+                            autoFocus
                         />
                     </div>
 
