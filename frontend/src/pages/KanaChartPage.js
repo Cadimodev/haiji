@@ -1,11 +1,18 @@
 import React from "react";
-import kanaChart from "../assets/hiragana_katakana.png";
+import kanaChart from "../assets/Hiragana-Katakana-2k.png";
+import "../styles/KanaChartPage.css";
 
 function KanaChartPage() {
     return (
-        <div className="main-block">
-            <h1>Hiragana & Katakana Chart</h1>
-            <img src={kanaChart} alt="Hiragana & Katakana Chart" style={{ maxWidth: "100%", height: "auto" }} />
+        <div className="kana-chart-page">
+            <h1 className="kana-chart-header">Hiragana & Katakana Chart</h1>
+            <div className="kana-chart-container">
+                <img
+                    src={kanaChart}
+                    alt="Hiragana & Katakana Chart"
+                    className="kana-chart-image"
+                />
+            </div>
         </div>
     );
 }

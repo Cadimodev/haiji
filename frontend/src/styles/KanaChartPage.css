@@ -1,0 +1,40 @@
+.kana-chart-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.kana-chart-header {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #e5e7eb;
+    /* grayish white */
+    margin-bottom: 2rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.kana-chart-container {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    max-width: 1200px;
+    /* Larger max width */
+    width: 95%;
+}
+
+.kana-chart-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+}
