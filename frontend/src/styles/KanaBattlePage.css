@@ -370,3 +370,47 @@
     background: #374151;
     transform: translateY(-1px);
 }
+
+/* Copy Room Button Styles */
+.battle-header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.battle-room-header {
+    /* Reset margin/padding since it's now in a container */
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+}
+
+.copy-room-btn {
+    background: #374151;
+    /* Gray-700 */
+    color: #e5e7eb;
+    /* Gray-200 */
+    border: 1px solid #4b5563;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.copy-room-btn:hover {
+    background: #4b5563;
+    /* Gray-600 */
+    color: #fff;
+    border-color: #6b7280;
+}
+
+.copy-room-btn:active {
+    transform: translateY(1px);
+}

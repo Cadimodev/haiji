@@ -29,6 +29,7 @@ function KanaBattlePage() {
     const [userInput, setUserInput] = useState("");
     const [score, setScore] = useState(0);
     const [showRomanji, setShowRomanji] = useState(false); // Hover state
+    const [showCopied, setShowCopied] = useState(false); // Copy interaction state
 
     const inputRef = useRef(null);
 
@@ -152,6 +153,12 @@ function KanaBattlePage() {
         }
     }
 
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(roomCode);
+        setShowCopied(true);
+        setTimeout(() => setShowCopied(false), 2000);
+    };
+
     // Input Logic
     const handleInputChange = (e) => {
         const val = e.target.value;
@@ -199,7 +206,16 @@ function KanaBattlePage() {
 
     return (
         <div className="kana-battle-page">
-            <h1 className="battle-room-header">Room: {roomCode}</h1>
+            <div className="battle-header-container">
+                <h1 className="battle-room-header">Room: {roomCode}</h1>
+                <button
+                    onClick={copyToClipboard}
+                    className="copy-room-btn"
+                    title="Copy Room Code"
+                >
+                    {showCopied ? "Copied!" : "Copy"}
+                </button>
+            </div>
 
             {gameState === "CONNECTING" && <div className="text-white text-center">Connecting...</div>}
 
