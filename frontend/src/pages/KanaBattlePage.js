@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { charGroups, getRandomIndex } from "../utils/kanaData";
@@ -171,6 +171,29 @@ function KanaBattlePage() {
         }
     };
 
+    /**
+     * Ranking Logic
+     * Calculates player rankings using the "Standard Competition Ranking" (1-2-2-4).
+     * Players with the same score receive the same rank. The next rank is skipped.
+     * * Example Trace:
+     * | Player | Score | Index | Comparison (p.score < prev.score) | Final Rank |
+     * |--------|-------|-------|-----------------------------------|------------|
+     * | Ana    | 100   | 0     | N/A (First element)               | 1          |
+     * | Juan   | 90    | 1     | 90 < 100 (True) -> Rank = i + 1   | 2          |
+     * | Clara  | 90    | 2     | 90 < 90  (False) -> Keeps Rank    | 2          |
+     * | David  | 80    | 3     | 80 < 90  (True) -> Rank = i + 1   | 4          |
+     */
+    const rankedPlayers = useMemo(() => {
+        const sorted = Object.values(players).sort((a, b) => b.score - a.score);
+        let currentRank = 1;
+        return sorted.map((p, i) => {
+            if (i > 0 && p.score < sorted[i - 1].score) {
+                currentRank = i + 1;
+            }
+            return { ...p, rank: currentRank };
+        });
+    }, [players]);
+
     if (loadingUser) return <div>Loading...</div>;
     if (gameState === "ERROR") return <div className="p-8 text-center text-red-500">{error}</div>;
 
@@ -257,17 +280,15 @@ function KanaBattlePage() {
                     <div className="battle-leaderboard-container">
                         <h3 className="leaderboard-title">Live Ranking</h3>
                         <div className="leaderboard-list">
-                            {Object.values(players)
-                                .sort((a, b) => b.score - a.score)
-                                .map((p, i) => (
-                                    <div key={p.userId} className={`leaderboard-item ${i === 0 ? 'top-rank' : ''}`}>
-                                        <div className="rank-info">
-                                            <span className={`rank-number ${i === 0 ? 'gold' : ''}`}>{i + 1}</span>
-                                            <span className="player-name">{p.username}</span>
-                                        </div>
-                                        <span className="player-score">{p.score}</span>
+                            {rankedPlayers.map((p) => (
+                                <div key={p.userId} className={`leaderboard-item ${p.rank === 1 ? 'top-rank' : ''}`}>
+                                    <div className="rank-info">
+                                        <span className={`rank-number ${p.rank === 1 ? 'gold' : ''}`}>{p.rank}</span>
+                                        <span className="player-name">{p.username}</span>
                                     </div>
-                                ))}
+                                    <span className="player-score">{p.score}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -278,15 +299,13 @@ function KanaBattlePage() {
                     <div className="game-over-card">
                         <h2 className="game-over-title">Game Over!</h2>
                         <div className="results-list">
-                            {Object.values(players)
-                                .sort((a, b) => b.score - a.score)
-                                .map((p, i) => (
-                                    <div key={p.userId} className={`result-item ${i === 0 ? 'winner' : ''}`}>
-                                        <div className="result-rank">#{i + 1}</div>
-                                        <div className="result-username">{p.username}</div>
-                                        <div className="result-score">{p.score}</div>
-                                    </div>
-                                ))}
+                            {rankedPlayers.map((p) => (
+                                <div key={p.userId} className={`result-item ${p.rank === 1 ? 'winner' : ''}`}>
+                                    <div className="result-rank">#{p.rank}</div>
+                                    <div className="result-username">{p.username}</div>
+                                    <div className="result-score">{p.score}</div>
+                                </div>
+                            ))}
                         </div>
                         <button
                             onClick={() => navigate("/kana-battle")}
