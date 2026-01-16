@@ -33,19 +33,19 @@ const HomePage = () => {
                 <div className="feature-card" onClick={() => navigate('/kana-chart')}>
                     <div className="feature-icon">あ</div>
                     <h3>Kana Chart</h3>
-                    <p>Master Hiragana & Katakana with interactive charts.</p>
+                    <p>Quick visual reference for Hiragana & Katakana.</p>
                 </div>
 
                 <div className="feature-card" onClick={() => navigate('/kana-practice')}>
                     <div className="feature-icon">✍️</div>
                     <h3>Practice</h3>
-                    <p>Hone your skills with guided writing and quizzes.</p>
+                    <p>Train your eye. Identify the Kana.</p>
                 </div>
 
                 <div className="feature-card" onClick={() => navigate('/kana-battle')}>
                     <div className="feature-icon">⚔️</div>
                     <h3>Battle</h3>
-                    <p>Test your speed and accuracy in real-time duels.</p>
+                    <p>Compete in timed multiplayer duels.</p>
                 </div>
             </section>
         </div>
