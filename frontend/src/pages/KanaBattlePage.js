@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { charGroups, getRandomIndex } from "../utils/kanaData";
+import { hiraganaCharGroups } from "../utils/kanaData";
+import { getRandomIndex } from "../utils/mathUtils";
 import "../styles/KanaBattleLandingPage.css"; // Reuse for now
 import "../styles/KanaPracticePage.css"; // Reuse card styles
 import "../styles/KanaBattlePage.css"; // Specific Battle styles
@@ -98,7 +99,7 @@ function KanaBattlePage() {
 
                 // Initialize Game Pool if config is present
                 if (msg.config && msg.config.groups) {
-                    const pool = msg.config.groups.flatMap(id => charGroups[id] || []);
+                    const pool = msg.config.groups.flatMap(id => hiraganaCharGroups[id] || []);
                     setDefinitions(pool);
                 }
                 break;

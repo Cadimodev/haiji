@@ -6,7 +6,13 @@ import React, {
     useCallback,
 } from "react";
 import '../styles/KanaPracticePage.css';
-import { charGroups, getRandomIndex } from "../utils/kanaData";
+import {
+    hiraganaCharGroups,
+    GROUP_IDS,
+    BASIC_HIRAGANA_GROUPS,
+    COMBINATION_HIRAGANA_GROUPS
+} from "../utils/kanaData";
+import { getRandomIndex } from "../utils/mathUtils";
 
 const MESSAGES = {
     instruction: "Hover over the kana to show its romanization and type the answer.",
@@ -19,23 +25,12 @@ const MESSAGES = {
 
 function KanaPracticePage() {
 
-    const [checkedGroups, setCheckedGroups] = useState({
-        hsingle: true,
-        hk: false,
-        hs: false,
-        ht: false,
-        hn: false,
-        hh: false,
-        hm: false,
-        hy: false,
-        hr: false,
-        hw: false,
-        hn1: false,
-        hg: false,
-        hz: false,
-        hd: false,
-        hb: false,
-        hp: false,
+    const [checkedGroups, setCheckedGroups] = useState(() => {
+        const initial = {};
+        GROUP_IDS.forEach(id => {
+            initial[id] = id === "hsingle";
+        });
+        return initial;
     });
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,9 +48,9 @@ function KanaPracticePage() {
             .map(([id]) => id);
 
         if (selectedGroups.length === 0) {
-            return charGroups["hsingle"];
+            return hiraganaCharGroups["hsingle"];
         }
-        return selectedGroups.flatMap((id) => charGroups[id] || []);
+        return selectedGroups.flatMap((id) => hiraganaCharGroups[id] || []);
     }, [checkedGroups]);
 
     useEffect(() => {
@@ -174,45 +169,83 @@ function KanaPracticePage() {
                     </div>
                 </div>
             </div>
+
             <div className="kana-table-container">
                 <h3 className="kana-table-title">Hiragana</h3>
                 <table className="tableKana">
                     <thead>
                         <tr>
-                            {Object.keys(charGroups)
-                                .filter(id => id.startsWith("h"))
-                                .map(id => (
-                                    <th key={id}>
-                                        <input
-                                            type="checkbox"
-                                            className="kanacheck"
-                                            id={id}
-                                            checked={checkedGroups[id] || false}
-                                            onChange={() => toggleCheckbox(id)}
-                                        />
-                                    </th>
-                                ))}
+                            {BASIC_HIRAGANA_GROUPS.map(id => (
+                                <th key={id}>
+                                    <input
+                                        type="checkbox"
+                                        className="kanacheck"
+                                        id={id}
+                                        checked={checkedGroups[id] || false}
+                                        onChange={() => toggleCheckbox(id)}
+                                    />
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
                         {Array.from({ length: 5 }).map((_, rowIndex) => (
                             <tr key={rowIndex}>
-                                {Object.keys(charGroups)
-                                    .filter(id => id.startsWith("h"))
-                                    .map(id => {
-                                        const char = charGroups[id][rowIndex];
-                                        return (
-                                            <td key={id}>
-                                                {char ? (
-                                                    <>
-                                                        <span className="kana">{char.kana}</span>
-                                                        <br />
-                                                        <span className="romaji">{char.romanji}</span>
-                                                    </>
-                                                ) : null}
-                                            </td>
-                                        );
-                                    })}
+                                {BASIC_HIRAGANA_GROUPS.map(id => {
+                                    const char = hiraganaCharGroups[id][rowIndex];
+                                    return (
+                                        <td key={id}>
+                                            {char ? (
+                                                <>
+                                                    <span className="kana">{char.kana}</span>
+                                                    <br />
+                                                    <span className="romaji">{char.romanji}</span>
+                                                </>
+                                            ) : null}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="kana-table-container" style={{ marginTop: '2rem' }}>
+                <h3 className="kana-table-title">Hiragana Combinations (Yoon)</h3>
+                <table className="tableKana">
+                    <thead>
+                        <tr>
+                            {COMBINATION_HIRAGANA_GROUPS.map(id => (
+                                <th key={id}>
+                                    <input
+                                        type="checkbox"
+                                        className="kanacheck"
+                                        id={id}
+                                        checked={checkedGroups[id] || false}
+                                        onChange={() => toggleCheckbox(id)}
+                                    />
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: 3 }).map((_, rowIndex) => (
+                            <tr key={rowIndex}>
+                                {COMBINATION_HIRAGANA_GROUPS.map(id => {
+                                    const char = hiraganaCharGroups[id][rowIndex];
+                                    return (
+                                        <td key={id}>
+                                            {char ? (
+                                                <>
+                                                    <span className="kana">{char.kana}</span>
+                                                    <br />
+                                                    <span className="romaji">{char.romanji}</span>
+                                                </>
+                                            ) : null}
+                                        </td>
+                                    );
+                                })}
                             </tr>
                         ))}
                     </tbody>

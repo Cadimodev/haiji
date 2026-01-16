@@ -1,7 +1,6 @@
+// --- INTERNAL DATA SOURCES (SINGLE SOURCE OF TRUTH) ---
 
-// Kana data extracted from KanaPracticePage.js with additional utilities
-
-export const charGroups = {
+const BASIC_DATA = {
     hsingle: [
         { kana: "あ", romanji: "a" },
         { kana: "い", romanji: "i" },
@@ -107,9 +106,65 @@ export const charGroups = {
     ],
 };
 
-export const GROUP_IDS = Object.keys(charGroups);
+const COMBINATIONS_DATA = {
+    hkya: [
+        { kana: "きゃ", romanji: "kya" },
+        { kana: "きゅ", romanji: "kyu" },
+        { kana: "きょ", romanji: "kyo" },
+    ],
+    hsha: [
+        { kana: "しゃ", romanji: "sha" },
+        { kana: "しゅ", romanji: "shu" },
+        { kana: "しょ", romanji: "sho" },
+    ],
+    hcha: [
+        { kana: "ちゃ", romanji: "cha" },
+        { kana: "ちゅ", romanji: "chu" },
+        { kana: "ちょ", romanji: "cho" },
+    ],
+    hnya: [
+        { kana: "にゃ", romanji: "nya" },
+        { kana: "にゅ", romanji: "nyu" },
+        { kana: "にょ", romanji: "nyo" },
+    ],
+    hhya: [
+        { kana: "ひゃ", romanji: "hya" },
+        { kana: "ひゅ", romanji: "hyu" },
+        { kana: "ひょ", romanji: "hyo" },
+    ],
+    hmya: [
+        { kana: "みゃ", romanji: "mya" },
+        { kana: "みゅ", romanji: "myu" },
+        { kana: "みょ", romanji: "myo" },
+    ],
+    hrya: [
+        { kana: "りゃ", romanji: "rya" },
+        { kana: "りゅ", romanji: "ryu" },
+        { kana: "りょ", romanji: "ryo" },
+    ],
+    hgya: [
+        { kana: "ぎゃ", romanji: "gya" },
+        { kana: "ぎゅ", romanji: "gyu" },
+        { kana: "ぎょ", romanji: "gyo" },
+    ],
+    hja: [
+        { kana: "じゃ", romanji: "ja" },
+        { kana: "じゅ", romanji: "ju" },
+        { kana: "じょ", romanji: "jo" },
+    ],
+    hbya: [
+        { kana: "びゃ", romanji: "bya" },
+        { kana: "びゅ", romanji: "byu" },
+        { kana: "びょ", romanji: "byo" },
+    ],
+    hpya: [
+        { kana: "ぴゃ", romanji: "pya" },
+        { kana: "ぴゅ", romanji: "pyu" },
+        { kana: "ぴょ", romanji: "pyo" },
+    ],
+};
 
-export const GROUP_LABELS = {
+const BASIC_LABELS_MAP = {
     hsingle: "あ-row",
     hk: "か-row",
     hs: "さ-row",
@@ -128,11 +183,41 @@ export const GROUP_LABELS = {
     hp: "ぱ-row",
 };
 
-export function getRandomIndex(current, max) {
-    if (max === 0) return 0;
-    let next = Math.floor(Math.random() * max);
-    while (next === current && max > 1) {
-        next = Math.floor(Math.random() * max);
-    }
-    return next;
-}
+const COMBINATIONS_LABELS_MAP = {
+    hkya: "kya-row",
+    hsha: "sha-row",
+    hcha: "cha-row",
+    hnya: "nya-row",
+    hhya: "hya-row",
+    hmya: "mya-row",
+    hrya: "rya-row",
+    hgya: "gya-row",
+    hja: "ja-row",
+    hbya: "bya-row",
+    hpya: "pya-row",
+};
+
+// --- EXPORTS (DERIVED) ---
+
+// 1. Full data object (merged)
+export const hiraganaCharGroups = {
+    ...BASIC_DATA,
+    ...COMBINATIONS_DATA
+};
+
+// 2. Full labels object (merged)
+export const GROUP_LABELS = {
+    ...BASIC_LABELS_MAP,
+    ...COMBINATIONS_LABELS_MAP
+};
+
+// 3. Group Lists (Derived from keys)
+export const BASIC_HIRAGANA_GROUPS = Object.keys(BASIC_DATA);
+export const COMBINATION_HIRAGANA_GROUPS = Object.keys(COMBINATIONS_DATA);
+
+// 4. All Group IDs (Concatenated)
+export const GROUP_IDS = [
+    ...BASIC_HIRAGANA_GROUPS,
+    ...COMBINATION_HIRAGANA_GROUPS
+];
+
