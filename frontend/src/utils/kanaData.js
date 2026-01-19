@@ -1,6 +1,8 @@
 // --- INTERNAL DATA SOURCES (SINGLE SOURCE OF TRUTH) ---
 
-const BASIC_DATA = {
+// --- INTERNAL DATA SOURCES (SINGLE SOURCE OF TRUTH) ---
+
+const HBASIC_DATA = {
     hsingle: [
         { kana: "あ", romanji: "a" },
         { kana: "い", romanji: "i" },
@@ -106,6 +108,112 @@ const BASIC_DATA = {
     ],
 };
 
+const KBASIC_DATA = {
+    ksingle: [
+        { kana: "ア", romanji: "a" },
+        { kana: "イ", romanji: "i" },
+        { kana: "ウ", romanji: "u" },
+        { kana: "エ", romanji: "e" },
+        { kana: "オ", romanji: "o" },
+    ],
+    kk: [
+        { kana: "カ", romanji: "ka" },
+        { kana: "キ", romanji: "ki" },
+        { kana: "ク", romanji: "ku" },
+        { kana: "ケ", romanji: "ke" },
+        { kana: "コ", romanji: "ko" },
+    ],
+    ks: [
+        { kana: "サ", romanji: "sa" },
+        { kana: "シ", romanji: "shi" },
+        { kana: "ス", romanji: "su" },
+        { kana: "セ", romanji: "se" },
+        { kana: "ソ", romanji: "so" },
+    ],
+    kt: [
+        { kana: "タ", romanji: "ta" },
+        { kana: "チ", romanji: "chi" },
+        { kana: "ツ", romanji: "tsu" },
+        { kana: "テ", romanji: "te" },
+        { kana: "ト", romanji: "to" },
+    ],
+    kn: [
+        { kana: "ナ", romanji: "na" },
+        { kana: "ニ", romanji: "ni" },
+        { kana: "ヌ", romanji: "nu" },
+        { kana: "ネ", romanji: "ne" },
+        { kana: "ノ", romanji: "no" },
+    ],
+    kh: [
+        { kana: "ハ", romanji: "ha" },
+        { kana: "ヒ", romanji: "hi" },
+        { kana: "フ", romanji: "fu" },
+        { kana: "ヘ", romanji: "he" },
+        { kana: "ホ", romanji: "ho" },
+    ],
+    km: [
+        { kana: "マ", romanji: "ma" },
+        { kana: "ミ", romanji: "mi" },
+        { kana: "ム", romanji: "mu" },
+        { kana: "メ", romanji: "me" },
+        { kana: "モ", romanji: "mo" },
+    ],
+    ky: [
+        { kana: "ヤ", romanji: "ya" },
+        { kana: "ユ", romanji: "yu" },
+        { kana: "ヨ", romanji: "yo" },
+    ],
+    kr: [
+        { kana: "ラ", romanji: "ra" },
+        { kana: "リ", romanji: "ri" },
+        { kana: "ル", romanji: "ru" },
+        { kana: "レ", romanji: "re" },
+        { kana: "ロ", romanji: "ro" },
+    ],
+    kw: [
+        { kana: "ワ", romanji: "wa" },
+        { kana: "ヲ", romanji: "o" },
+    ],
+    kn1: [
+        { kana: "ン", romanji: "n" },
+    ],
+    kg: [
+        { kana: "ガ", romanji: "ga" },
+        { kana: "ギ", romanji: "gi" },
+        { kana: "グ", romanji: "gu" },
+        { kana: "ゲ", romanji: "ge" },
+        { kana: "ゴ", romanji: "go" },
+    ],
+    kz: [
+        { kana: "ザ", romanji: "za" },
+        { kana: "ジ", romanji: "ji" },
+        { kana: "ズ", romanji: "zu" },
+        { kana: "ゼ", romanji: "ze" },
+        { kana: "ゾ", romanji: "zo" },
+    ],
+    kd: [
+        { kana: "ダ", romanji: "da" },
+        { kana: "ヂ", romanji: "ji" },
+        { kana: "ヅ", romanji: "zu" },
+        { kana: "デ", romanji: "de" },
+        { kana: "ド", romanji: "do" },
+    ],
+    kb: [
+        { kana: "バ", romanji: "ba" },
+        { kana: "ビ", romanji: "bi" },
+        { kana: "ブ", romanji: "bu" },
+        { kana: "ベ", romanji: "be" },
+        { kana: "ボ", romanji: "bo" },
+    ],
+    kp: [
+        { kana: "パ", romanji: "pa" },
+        { kana: "ピ", romanji: "pi" },
+        { kana: "プ", romanji: "pu" },
+        { kana: "ペ", romanji: "pe" },
+        { kana: "ポ", romanji: "po" },
+    ],
+};
+
 const COMBINATIONS_DATA = {
     hkya: [
         { kana: "きゃ", romanji: "kya" },
@@ -164,7 +272,7 @@ const COMBINATIONS_DATA = {
     ],
 };
 
-const BASIC_LABELS_MAP = {
+const HBASIC_LABELS_MAP = {
     hsingle: "あ-row",
     hk: "か-row",
     hs: "さ-row",
@@ -181,6 +289,25 @@ const BASIC_LABELS_MAP = {
     hd: "だ-row",
     hb: "ば-row",
     hp: "ぱ-row",
+};
+
+const KBASIC_LABELS_MAP = {
+    ksingle: "ア-row",
+    kk: "カ-row",
+    ks: "サ-row",
+    kt: "タ-row",
+    kn: "ナ-row",
+    kh: "ハ-row",
+    km: "マ-row",
+    ky: "ヤ-row",
+    kr: "ラ-row",
+    kw: "ワ-row",
+    kn1: "ン",
+    kg: "ガ-row",
+    kz: "ザ-row",
+    kd: "ダ-row",
+    kb: "バ-row",
+    kp: "パ-row",
 };
 
 const COMBINATIONS_LABELS_MAP = {
@@ -200,24 +327,31 @@ const COMBINATIONS_LABELS_MAP = {
 // --- EXPORTS (DERIVED) ---
 
 // 1. Full data object (merged)
-export const hiraganaCharGroups = {
-    ...BASIC_DATA,
+export const kanaCharGroups = {
+    ...HBASIC_DATA,
+    ...KBASIC_DATA,
     ...COMBINATIONS_DATA
 };
 
+// Alias for backward compatibility (can update consumers to use kanaCharGroups later)
+export const hiraganaCharGroups = kanaCharGroups;
+
 // 2. Full labels object (merged)
 export const GROUP_LABELS = {
-    ...BASIC_LABELS_MAP,
+    ...HBASIC_LABELS_MAP,
+    ...KBASIC_LABELS_MAP,
     ...COMBINATIONS_LABELS_MAP
 };
 
 // 3. Group Lists (Derived from keys)
-export const BASIC_HIRAGANA_GROUPS = Object.keys(BASIC_DATA);
+export const BASIC_HIRAGANA_GROUPS = Object.keys(HBASIC_DATA);
+export const BASIC_KATAKANA_GROUPS = Object.keys(KBASIC_DATA);
 export const COMBINATION_HIRAGANA_GROUPS = Object.keys(COMBINATIONS_DATA);
 
 // 4. All Group IDs (Concatenated)
 export const GROUP_IDS = [
     ...BASIC_HIRAGANA_GROUPS,
+    ...BASIC_KATAKANA_GROUPS,
     ...COMBINATION_HIRAGANA_GROUPS
 ];
 

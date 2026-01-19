@@ -7,9 +7,10 @@ import React, {
 } from "react";
 import '../styles/KanaPracticePage.css';
 import {
-    hiraganaCharGroups,
+    kanaCharGroups,
     GROUP_IDS,
     BASIC_HIRAGANA_GROUPS,
+    BASIC_KATAKANA_GROUPS,
     COMBINATION_HIRAGANA_GROUPS
 } from "../utils/kanaData";
 import { getRandomIndex } from "../utils/mathUtils";
@@ -48,9 +49,9 @@ function KanaPracticePage() {
             .map(([id]) => id);
 
         if (selectedGroups.length === 0) {
-            return hiraganaCharGroups["hsingle"];
+            return kanaCharGroups["hsingle"];
         }
-        return selectedGroups.flatMap((id) => hiraganaCharGroups[id] || []);
+        return selectedGroups.flatMap((id) => kanaCharGroups[id] || []);
     }, [checkedGroups]);
 
     useEffect(() => {
@@ -192,7 +193,48 @@ function KanaPracticePage() {
                         {Array.from({ length: 5 }).map((_, rowIndex) => (
                             <tr key={rowIndex}>
                                 {BASIC_HIRAGANA_GROUPS.map(id => {
-                                    const char = hiraganaCharGroups[id][rowIndex];
+                                    const char = kanaCharGroups[id][rowIndex];
+                                    return (
+                                        <td key={id}>
+                                            {char ? (
+                                                <>
+                                                    <span className="kana">{char.kana}</span>
+                                                    <br />
+                                                    <span className="romaji">{char.romanji}</span>
+                                                </>
+                                            ) : null}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="kana-table-container" style={{ marginTop: '2rem' }}>
+                <h3 className="kana-table-title">Katakana</h3>
+                <table className="tableKana">
+                    <thead>
+                        <tr>
+                            {BASIC_KATAKANA_GROUPS.map(id => (
+                                <th key={id}>
+                                    <input
+                                        type="checkbox"
+                                        className="kanacheck"
+                                        id={id}
+                                        checked={checkedGroups[id] || false}
+                                        onChange={() => toggleCheckbox(id)}
+                                    />
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: 5 }).map((_, rowIndex) => (
+                            <tr key={rowIndex}>
+                                {BASIC_KATAKANA_GROUPS.map(id => {
+                                    const char = kanaCharGroups[id][rowIndex];
                                     return (
                                         <td key={id}>
                                             {char ? (
@@ -233,7 +275,7 @@ function KanaPracticePage() {
                         {Array.from({ length: 3 }).map((_, rowIndex) => (
                             <tr key={rowIndex}>
                                 {COMBINATION_HIRAGANA_GROUPS.map(id => {
-                                    const char = hiraganaCharGroups[id][rowIndex];
+                                    const char = kanaCharGroups[id][rowIndex];
                                     return (
                                         <td key={id}>
                                             {char ? (

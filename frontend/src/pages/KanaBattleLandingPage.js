@@ -6,12 +6,13 @@ import {
     GROUP_IDS,
     GROUP_LABELS,
     BASIC_HIRAGANA_GROUPS,
+    BASIC_KATAKANA_GROUPS,
     COMBINATION_HIRAGANA_GROUPS
 } from "../utils/kanaData";
 
 
-const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht"];
-const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "hr"];
+const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht", "ksingle", "kk", "ks", "kt"];
+const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "hr", "ksingle", "kk", "ks", "kt", "kn", "kh", "km", "ky", "kr"];
 const ALL_GROUPS = [...GROUP_IDS];
 
 function KanaBattleLandingPage() {
@@ -195,6 +196,31 @@ function KanaBattleLandingPage() {
                                             <h4 className="kana-battle-group-title">Basic Hiragana</h4>
                                             <div className="kana-battle-group-grid">
                                                 {BASIC_HIRAGANA_GROUPS.map((id) => {
+                                                    const active = !!selectedGroups[id];
+                                                    return (
+                                                        <button
+                                                            key={id}
+                                                            type="button"
+                                                            className={
+                                                                "kana-battle-group-pill" +
+                                                                (active ? " active" : "")
+                                                            }
+                                                            onClick={() => handleToggleGroup(id)}
+                                                        >
+                                                            <span className="kana-battle-group-indicator" />
+                                                            <span className="kana-battle-group-label">
+                                                                {GROUP_LABELS[id] || id.toUpperCase()}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="kana-battle-group-section" style={{ marginTop: '1.5rem' }}>
+                                            <h4 className="kana-battle-group-title">Basic Katakana</h4>
+                                            <div className="kana-battle-group-grid">
+                                                {BASIC_KATAKANA_GROUPS.map((id) => {
                                                     const active = !!selectedGroups[id];
                                                     return (
                                                         <button
