@@ -5,9 +5,7 @@ import "../styles/KanaBattleLandingPage.css";
 import {
     GROUP_IDS,
     GROUP_LABELS,
-    BASIC_HIRAGANA_GROUPS,
-    BASIC_KATAKANA_GROUPS,
-    COMBINATION_HIRAGANA_GROUPS
+    getGroupsBy
 } from "../utils/kanaData";
 
 
@@ -195,7 +193,7 @@ function KanaBattleLandingPage() {
                                         <div className="kana-battle-group-section">
                                             <h4 className="kana-battle-group-title">Basic Hiragana</h4>
                                             <div className="kana-battle-group-grid">
-                                                {BASIC_HIRAGANA_GROUPS.map((id) => {
+                                                {getGroupsBy("hiragana", "basic").map((id) => {
                                                     const active = !!selectedGroups[id];
                                                     return (
                                                         <button
@@ -220,7 +218,7 @@ function KanaBattleLandingPage() {
                                         <div className="kana-battle-group-section" style={{ marginTop: '1.5rem' }}>
                                             <h4 className="kana-battle-group-title">Basic Katakana</h4>
                                             <div className="kana-battle-group-grid">
-                                                {BASIC_KATAKANA_GROUPS.map((id) => {
+                                                {getGroupsBy("katakana", "basic").map((id) => {
                                                     const active = !!selectedGroups[id];
                                                     return (
                                                         <button
@@ -245,7 +243,32 @@ function KanaBattleLandingPage() {
                                         <div className="kana-battle-group-section" style={{ marginTop: '1.5rem' }}>
                                             <h4 className="kana-battle-group-title">Hiragana Combinations (Yoon)</h4>
                                             <div className="kana-battle-group-grid">
-                                                {COMBINATION_HIRAGANA_GROUPS.map((id) => {
+                                                {getGroupsBy("hiragana", "combination").map((id) => {
+                                                    const active = !!selectedGroups[id];
+                                                    return (
+                                                        <button
+                                                            key={id}
+                                                            type="button"
+                                                            className={
+                                                                "kana-battle-group-pill" +
+                                                                (active ? " active" : "")
+                                                            }
+                                                            onClick={() => handleToggleGroup(id)}
+                                                        >
+                                                            <span className="kana-battle-group-indicator" />
+                                                            <span className="kana-battle-group-label">
+                                                                {GROUP_LABELS[id] || id.toUpperCase()}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="kana-battle-group-section" style={{ marginTop: '1.5rem' }}>
+                                            <h4 className="kana-battle-group-title">Katakana Combinations (Yoon)</h4>
+                                            <div className="kana-battle-group-grid">
+                                                {getGroupsBy("katakana", "combination").map((id) => {
                                                     const active = !!selectedGroups[id];
                                                     return (
                                                         <button
@@ -268,7 +291,7 @@ function KanaBattleLandingPage() {
                                         </div>
 
                                         <p className="kana-battle-groups-hint">
-                                            These groups match the Hiragana groups used in the Practice page.
+                                            These groups match the Kana groups used in the Practice page.
                                         </p>
                                     </div>
                                 )}
