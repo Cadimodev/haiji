@@ -1,5 +1,5 @@
 import React from "react";
-import kanaChart from "../assets/Hiragana-Katakana-2k.png";
+import kanaChart from "../assets/kana-chartV3.jpg";
 import "../styles/KanaChartPage.css";
 
 function KanaChartPage() {
