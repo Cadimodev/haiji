@@ -7,7 +7,7 @@ import {
     GROUP_LABELS,
     getGroupsBy
 } from "../utils/kanaData";
-
+import { API_BASE_URL, ENDPOINTS } from "../config/api";
 
 const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht", "ksingle", "kk", "ks", "kt"];
 const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "hr", "ksingle", "kk", "ks", "kt", "kn", "kh", "km", "ky", "kr"];
@@ -72,7 +72,7 @@ function KanaBattleLandingPage() {
             return;
         }
 
-        const { ok, data } = await fetchJsonWithAuth("http://localhost:8080/api/kana-battle", {
+        const { ok, data } = await fetchJsonWithAuth(`${API_BASE_URL}${ENDPOINTS.KANA_BATTLE}`, {
             method: "POST",
             body: JSON.stringify({
                 duration,
