@@ -1,40 +1,97 @@
+let refreshInterceptor = null;
+
+export function registerAuthInterceptor(callback) {
+    refreshInterceptor = callback;
+}
+
 export async function httpRequest(url, options = {}) {
-    try {
-        const finalOptions = {
-            ...options,
-            credentials: "include",
-            headers: {
-                ...(options.headers || {}),
-            },
-        };
+    // Helper to perform the actual fetch
+    const doFetch = async (reqUrl, reqOptions) => {
+        try {
+            const finalOptions = {
+                ...reqOptions,
+                credentials: "include", // Important for cookies
+                headers: {
+                    ...(reqOptions.headers || {}),
+                },
+            };
 
-        const res = await fetch(url, finalOptions);
-        const contentType = res.headers.get("Content-Type") || "";
+            const res = await fetch(reqUrl, finalOptions);
+            const contentType = res.headers.get("Content-Type") || "";
 
-        let data = null;
-        if (contentType.includes("application/json")) {
-            try {
-                data = await res.json();
-            } catch {
-                data = null;
+            let data = null;
+            if (contentType.includes("application/json")) {
+                try {
+                    data = await res.json();
+                } catch {
+                    data = null;
+                }
             }
-        }
 
-        if (!res.ok) {
-            const message =
-                data?.message ||
-                data?.error ||
-                `Request failed with status ${res.status}`;
-            return { ok: false, status: res.status, data, error: message };
+            return { ok: res.ok, status: res.status, data, res };
+        } catch (err) {
+            return {
+                ok: false,
+                status: 0,
+                data: null,
+                error: err.message || "Network error",
+            };
         }
+    };
 
-        return { ok: true, status: res.status, data, error: null };
-    } catch (err) {
+    // 1. Initial Request
+    let response = await doFetch(url, options);
+
+    // 2. Check for 401 & Interceptor
+    // Avoid retrying the refresh endpoint itself to prevent infinite loops
+    // Assumes refresh endpoint is "/api/refresh-token"
+    if (
+        response.status === 401 &&
+        refreshInterceptor &&
+        !url.includes("/api/refresh-token") &&
+        !options._retry // Custom flag to prevent infinite loops
+    ) {
+        try {
+            // Attempt to refresh token
+            const newToken = await refreshInterceptor();
+
+            if (newToken) {
+                // Retry original request with new token
+                // If the original request had an Authorization header, update it
+                const newOptions = {
+                    ...options,
+                    _retry: true,
+                    headers: {
+                        ...(options.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                };
+                response = await doFetch(url, newOptions);
+            }
+        } catch (error) {
+            // Refresh failed, return the original 401 response or error
+            console.error("Silent refresh failed:", error);
+        }
+    }
+
+    // 3. Process Final Response
+    if (!response.ok) {
+        const message =
+            response.data?.message ||
+            response.data?.error ||
+            `Request failed with status ${response.status}`;
         return {
             ok: false,
-            status: 0,
-            data: null,
-            error: err.message || "Network error",
+            status: response.status,
+            data: response.data,
+            error: message,
         };
     }
+
+    return {
+        ok: true,
+        status: response.status,
+        data: response.data,
+        error: null,
+    };
 }

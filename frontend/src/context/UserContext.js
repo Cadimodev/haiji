@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from "react";
+import { httpRequest, registerAuthInterceptor } from "../utils/http"; // Import registerAuthInterceptor
 import { refreshTokenRequest, revokeTokenRequest } from "../services/authService";
 
 const UserContext = createContext();
@@ -6,6 +7,46 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loadingUser, setLoadingUser] = useState(true);
+
+    const logout = useCallback(async () => {
+        try {
+            await revokeTokenRequest();
+        } catch (error) {
+            console.error("Error logging out of server:", error);
+        } finally {
+            setUser(null);
+            localStorage.removeItem("user");
+        }
+    }, []);
+
+    // Register the silent refresh interceptor
+    useEffect(() => {
+        registerAuthInterceptor(async () => {
+            console.log("Attempting silent refresh...");
+            const { ok, data } = await refreshTokenRequest();
+
+            if (ok && data?.token) {
+                const currentStored = JSON.parse(localStorage.getItem("user") || "{}");
+                const userId = data.id || currentStored.id;
+                const username = data.username || currentStored.username || "User";
+
+                const updatedUser = {
+                    id: userId,
+                    username: username,
+                    token: data.token,
+                };
+
+                setUser(updatedUser);
+                localStorage.setItem("user", JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
+                console.log("Silent refresh successful");
+                return data.token;
+            } else {
+                console.warn("Silent refresh failed - logging out");
+                await logout();
+                return null;
+            }
+        });
+    }, [logout]);
 
     useEffect(() => {
         const initializeUser = async () => {
@@ -48,17 +89,6 @@ export function UserProvider({ children }) {
         const newUser = { id, username, token };
         setUser(newUser);
         localStorage.setItem("user", JSON.stringify({ id, username }));
-    }, []);
-
-    const logout = useCallback(async () => {
-        try {
-            await revokeTokenRequest();
-        } catch (error) {
-            console.error("Error logging out of server:", error);
-        } finally {
-            setUser(null);
-            localStorage.removeItem("user");
-        }
     }, []);
 
     const value = useMemo(
