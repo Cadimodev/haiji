@@ -12,6 +12,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/game"
 	"github.com/Cadimodev/haiji/backend/internal/handlers"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
+	"github.com/rs/cors"
 )
 
 func New(apiCFG *config.ApiConfig) http.Handler {
@@ -124,5 +125,14 @@ func New(apiCFG *config.ApiConfig) http.Handler {
 		game.ServeWs(hub, w, r, userID, username)
 	})
 
-	return middleware.CorsMiddleware(mux, apiCFG.CorsAllowedOrigin)
+	// CORS configuration
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{apiCFG.CorsAllowedOrigin},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+		Debug:            apiCFG.Platform == "dev",
+	})
+
+	return c.Handler(mux)
 }
