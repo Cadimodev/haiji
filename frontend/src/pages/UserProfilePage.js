@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useAuthForm } from "../hooks/useAuthForm";
 import { useLogout } from "../hooks/useLogout";
-import { useAuthManager } from "../hooks/useAuthManager";
-import { getUserProfileAuthed, updateUserProfileAuthed } from "../services/authService";
+import { useApi } from "../hooks/useApi";
 import { validateUpdate } from "../utils/validation";
 import "../styles/AuthForm.css";
 
@@ -12,7 +11,7 @@ function UserProfilePage() {
     const { user, login, loadingUser } = useUser();
     const handleLogout = useLogout();
     const navigate = useNavigate();
-    const { fetchJsonWithAuth } = useAuthManager();
+    const { getUserProfile, updateUserProfile } = useApi();
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +19,7 @@ function UserProfilePage() {
 
     const loadProfile = useCallback(async () => {
         try {
-            const { ok, data } = await getUserProfileAuthed(fetchJsonWithAuth);
+            const { ok, data } = await getUserProfile();
             if (!ok || !data) {
                 handleLogout();
                 navigate("/");
@@ -34,7 +33,7 @@ function UserProfilePage() {
         } finally {
             setLoading(false);
         }
-    }, [fetchJsonWithAuth, handleLogout, navigate]);
+    }, [getUserProfile, handleLogout, navigate]);
 
     useEffect(() => {
         if (loadingUser) {
@@ -76,10 +75,7 @@ function UserProfilePage() {
         setIsSubmitting(true);
 
         try {
-            const { ok, data, error, status } = await updateUserProfileAuthed(
-                fetchJsonWithAuth,
-                values
-            );
+            const { ok, data, error, status } = await updateUserProfile(values);
 
             if (!ok) {
                 if (status === 409) {

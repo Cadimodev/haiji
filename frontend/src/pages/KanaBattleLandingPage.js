@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthManager } from "../hooks/useAuthManager";
+import { useApi } from "../hooks/useApi";
 import "../styles/KanaBattleLandingPage.css";
 import {
     GROUP_IDS,
@@ -14,7 +14,7 @@ const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "h
 const ALL_GROUPS = [...GROUP_IDS];
 
 function KanaBattleLandingPage() {
-    const { fetchJsonWithAuth } = useAuthManager();
+    const { createBattleRoom } = useApi();
     const navigate = useNavigate();
 
     const [joinCode, setJoinCode] = useState("");
@@ -72,13 +72,7 @@ function KanaBattleLandingPage() {
             return;
         }
 
-        const { ok, data } = await fetchJsonWithAuth(`${API_BASE_URL}${ENDPOINTS.KANA_BATTLE}`, {
-            method: "POST",
-            body: JSON.stringify({
-                duration,
-                groups: activeGroupIds
-            })
-        });
+        const { ok, data } = await createBattleRoom(duration, activeGroupIds);
 
         if (ok && data.code) {
             navigate(`/kana-battle/${data.code}`);

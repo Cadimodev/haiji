@@ -22,17 +22,7 @@ export function refreshTokenRequest() {
     });
 }
 
-export function getUserProfileAuthed(fetcher) {
-    return fetcher("/api/user-profile", { method: "GET" });
-}
 
-export function updateUserProfileAuthed(fetcher, payload) {
-    return fetcher("/api/users", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
-}
 
 export function revokeTokenRequest() {
     return httpRequest("/api/revoke-token", {
