@@ -9,6 +9,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
+	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
@@ -25,18 +26,13 @@ type User struct {
 
 func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
-	type parameters struct {
-		Password string `json:"password" validate:"required,min=8"`
-		Email    string `json:"email" validate:"required,email"`
-		Username string `json:"username" validate:"required,alphanum,min=3"`
-	}
 	type response struct {
 		User
 		Token string `json:"token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
+	params := dto.CreateUserRequest{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid JSON", err)
@@ -105,12 +101,6 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
-	type parameters struct {
-		NewPassword string `json:"newpassword" validate:"required,min=8"`
-		OldPassword string `json:"oldpassword" validate:"required"`
-		Email       string `json:"email" validate:"required,email"`
-		Username    string `json:"username" validate:"required,alphanum,min=3"`
-	}
 	type response struct {
 		User
 		Token string `json:"token"`
@@ -125,7 +115,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	// Parse body
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
+	params := dto.UpdateUserRequest{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid JSON", err)
