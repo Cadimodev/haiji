@@ -25,9 +25,9 @@ type User struct {
 func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
+		Password string `json:"password" validate:"required,min=8"`
+		Email    string `json:"email" validate:"required,email"`
+		Username string `json:"username" validate:"required,alphanum,min=3"`
 	}
 	type response struct {
 		User
@@ -42,12 +42,13 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	email := strings.ToLower(strings.TrimSpace(params.Email))
-	username := strings.TrimSpace(params.Username)
-	if email == "" || username == "" || params.Password == "" {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Missing or invalid fields", nil)
+	if err := utils.ValidateStruct(params); err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
+
+	email := strings.ToLower(strings.TrimSpace(params.Email))
+	username := strings.TrimSpace(params.Username)
 
 	hashedPass, err := auth.HashPassword(params.Password)
 	if err != nil {
@@ -87,7 +88,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.SetRefreshCookie(w, refreshToken)
+	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
 	utils.RespondWithJSON(w, http.StatusCreated, response{
 		User: User{
@@ -104,10 +105,10 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type parameters struct {
-		NewPassword string `json:"newpassword"`
-		OldPassword string `json:"oldpassword"`
-		Email       string `json:"email"`
-		Username    string `json:"username"`
+		NewPassword string `json:"newpassword" validate:"required,min=8"`
+		OldPassword string `json:"oldpassword" validate:"required"`
+		Email       string `json:"email" validate:"required,email"`
+		Username    string `json:"username" validate:"required,alphanum,min=3"`
 	}
 	type response struct {
 		User
@@ -135,12 +136,9 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	email := strings.ToLower(strings.TrimSpace(params.Email))
-	username := strings.TrimSpace(params.Username)
-	if email == "" || username == "" || params.NewPassword == "" {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Missing or invalid fields", nil)
-		return
-	}
+	params.Email = strings.ToLower(strings.TrimSpace(params.Email))
+	params.Username = strings.TrimSpace(params.Username)
+	email := params.Email
 
 	// Verify current pass
 	user, err := cfg.DB.GetUserByID(r.Context(), userID)
@@ -169,7 +167,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	// Update user
 	user, err = cfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
 		ID:             userID,
-		Email:          strings.ToLower(strings.TrimSpace(params.Email)),
+		Email:          email,
 		HashedPassword: hashedPassword,
 		Username:       params.Username,
 	})
@@ -190,7 +188,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.SetRefreshCookie(w, newRefresh)
+	utils.SetRefreshCookie(w, newRefresh, cfg.Platform != "dev")
 
 	utils.RespondWithJSON(w, http.StatusOK, response{
 		User: User{

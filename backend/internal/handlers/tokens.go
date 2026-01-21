@@ -62,7 +62,7 @@ func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		utils.ClearRefreshCookie(w)
+		utils.ClearRefreshCookie(w, cfg.Platform != "dev")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -80,7 +80,7 @@ func HandlerRevokeToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	utils.ClearRefreshCookie(w)
+	utils.ClearRefreshCookie(w, cfg.Platform != "dev")
 	w.WriteHeader(http.StatusNoContent)
 }
 

@@ -49,6 +49,7 @@ function RegisterPage() {
         navigate("/user-creation-success", {
             replace: true,
             state: {
+                id: data.id,
                 username: data.username,
                 token: data.token,
             },

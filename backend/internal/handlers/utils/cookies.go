@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func SetRefreshCookie(w http.ResponseWriter, token string) {
+func SetRefreshCookie(w http.ResponseWriter, token string, secure bool) {
 
 	cookie := http.Cookie{
 		Name:     "refresh_token",
@@ -13,14 +13,14 @@ func SetRefreshCookie(w http.ResponseWriter, token string) {
 		Path:     "/api/refresh-token",
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: true,
-		Secure:   false, // TODO: Change it to true when https
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	}
 
 	http.SetCookie(w, &cookie)
 }
 
-func ClearRefreshCookie(w http.ResponseWriter) {
+func ClearRefreshCookie(w http.ResponseWriter, secure bool) {
 
 	cookie := http.Cookie{
 		Name:     "refresh_token",
@@ -28,6 +28,8 @@ func ClearRefreshCookie(w http.ResponseWriter) {
 		Path:     "/api/refresh-token",
 		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	http.SetCookie(w, &cookie)

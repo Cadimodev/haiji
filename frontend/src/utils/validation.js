@@ -6,8 +6,8 @@ export function validateLogin(values) {
     if (!values.password) {
         errors.password = "Password is required";
     }
-    else if (values.password.length < 6) {
-        errors.password = "Password must be at least 6 characters";
+    else if (values.password.length < 8) {
+        errors.password = "Password must be at least 8 characters";
     }
     return errors;
 }
@@ -31,8 +31,8 @@ export function validateRegister(values) {
     if (!values.password) {
         errors.password = "Password is required";
     }
-    else if (values.password.length < 6) {
-        errors.password = "Password must be at least 6 characters";
+    else if (values.password.length < 8) {
+        errors.password = "Password must be at least 8 characters";
     }
 
     return errors;
@@ -57,8 +57,8 @@ export function validateUpdate(values) {
     if (!values.newPassword) {
         errors.newPassword = "Password is required";
     }
-    else if (values.newPassword.length < 6) {
-        errors.newPassword = "Password must be at least 6 characters";
+    else if (values.newPassword.length < 8) {
+        errors.newPassword = "Password must be at least 8 characters";
     }
 
     if (!values.oldPassword) {

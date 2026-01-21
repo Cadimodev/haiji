@@ -18,8 +18,8 @@ function UserCreatedPage() {
         }
 
         const payload = location.state;
-        if (payload?.token && payload?.username) {
-            login(payload.username, payload.token ?? "");
+        if (payload?.token && payload?.username && payload?.id) {
+            login(payload.id, payload.username, payload.token ?? "");
             setFinalising(false);
         } else {
             navigate("/register", { replace: true });

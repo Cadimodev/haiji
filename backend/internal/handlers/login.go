@@ -64,7 +64,7 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.SetRefreshCookie(w, refreshToken)
+	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
 	utils.RespondWithJSON(w, http.StatusOK, response{
 		User: User{
