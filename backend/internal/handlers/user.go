@@ -10,6 +10,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
+	"github.com/Cadimodev/haiji/backend/internal/middleware"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
 	"github.com/google/uuid"
 )
@@ -116,21 +117,16 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 
 	// Auth JWT
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't find JWT", err)
-		return
-	}
-	userID, err := auth.ValidateJWT(token, cfg.JWTSecret)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
 
 	// Parse body
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err = decoder.Decode(&params)
+	err := decoder.Decode(&params)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid JSON", err)
 		return
@@ -208,15 +204,9 @@ func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		User
 	}
 
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't find JWT", err)
-		return
-	}
-
-	userID, err := auth.ValidateJWT(token, cfg.JWTSecret)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Couldn't validate JWT", err)
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
 
