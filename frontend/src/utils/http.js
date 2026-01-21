@@ -44,7 +44,6 @@ export async function httpRequest(url, options = {}) {
 
     // 2. Check for 401 & Interceptor
     // Avoid retrying the refresh endpoint itself to prevent infinite loops
-    // Assumes refresh endpoint is "/api/refresh-token"
     if (
         response.status === 401 &&
         refreshInterceptor &&
