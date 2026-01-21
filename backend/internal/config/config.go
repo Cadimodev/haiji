@@ -16,7 +16,9 @@ type ApiConfig struct {
 	AssetsRoot    string
 	Port          string
 	RefreshPepper []byte
-	DBURL         string // Needed for initialization in main
+
+	DBURL             string
+	CorsAllowedOrigin string
 }
 
 func Load() (*ApiConfig, error) {
@@ -29,6 +31,7 @@ func Load() (*ApiConfig, error) {
 	filepathRoot := os.Getenv("FILEPATH_ROOT")
 	assetsRoot := os.Getenv("ASSETS_ROOT")
 	dbURL := os.Getenv("DB_URL")
+	corsAllowedOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
 
 	if platform == "" {
 		return nil, fmt.Errorf("PLATFORM environment variable is not set")
@@ -51,6 +54,9 @@ func Load() (*ApiConfig, error) {
 	if dbURL == "" {
 		return nil, fmt.Errorf("DB_URL environment variable is not set")
 	}
+	if corsAllowedOrigin == "" {
+		return nil, fmt.Errorf("CORS_ALLOWED_ORIGIN environment variable is not set")
+	}
 
 	return &ApiConfig{
 		JWTSecret:     jwtSecret,
@@ -59,6 +65,8 @@ func Load() (*ApiConfig, error) {
 		AssetsRoot:    assetsRoot,
 		Port:          port,
 		RefreshPepper: []byte(refreshPepper),
-		DBURL:         dbURL,
+
+		DBURL:             dbURL,
+		CorsAllowedOrigin: corsAllowedOrigin,
 	}, nil
 }

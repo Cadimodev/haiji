@@ -14,7 +14,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 )
 
-func New(apiCFG *config.ApiConfig) *http.ServeMux {
+func New(apiCFG *config.ApiConfig) http.Handler {
 	// Rate limiters
 	loginLimiter := middleware.NewRateLimiter(5, time.Minute)
 	refreshLimiter := middleware.NewRateLimiter(60, time.Minute)
@@ -124,5 +124,5 @@ func New(apiCFG *config.ApiConfig) *http.ServeMux {
 		game.ServeWs(hub, w, r, userID, username)
 	})
 
-	return mux
+	return middleware.CorsMiddleware(mux, apiCFG.CorsAllowedOrigin)
 }
