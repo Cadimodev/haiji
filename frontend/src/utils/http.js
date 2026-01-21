@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../config/api";
+
 let refreshInterceptor = null;
 
 export function registerAuthInterceptor(callback) {
@@ -40,7 +42,8 @@ export async function httpRequest(url, options = {}) {
     };
 
     // 1. Initial Request
-    let response = await doFetch(url, options);
+    const fullUrl = url.startsWith("/") ? `${API_BASE_URL}${url}` : url;
+    let response = await doFetch(fullUrl, options);
 
     // 2. Check for 401 & Interceptor
     // Avoid retrying the refresh endpoint itself to prevent infinite loops
@@ -65,7 +68,7 @@ export async function httpRequest(url, options = {}) {
                         Authorization: `Bearer ${newToken}`,
                     },
                 };
-                response = await doFetch(url, newOptions);
+                response = await doFetch(fullUrl, newOptions);
             }
         } catch (error) {
             // Refresh failed, return the original 401 response or error
