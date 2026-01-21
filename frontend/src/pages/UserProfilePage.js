@@ -16,6 +16,7 @@ function UserProfilePage() {
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     const loadProfile = useCallback(async () => {
         try {
@@ -92,12 +93,15 @@ function UserProfilePage() {
 
             if (data?.token) {
                 login(
+                    data.id ?? user.id,
                     data.username ?? user.username,
                     data.token ?? user.token
                 );
             }
 
             setBackendError("");
+            setSuccessMessage("Update successful!");
+            setTimeout(() => setSuccessMessage(""), 3000);
             await loadProfile();
             resetForm();
         } catch {
@@ -174,6 +178,7 @@ function UserProfilePage() {
                     </button>
 
                     {backendError && <div className="backend-error-msg">{backendError}</div>}
+                    {successMessage && <div className="success-msg" style={{ color: "#4caf50", marginTop: "10px", textAlign: "center" }}>{successMessage}</div>}
                 </form>
             </div>
         </div>
