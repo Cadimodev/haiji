@@ -22,8 +22,6 @@ export function refreshTokenRequest() {
     });
 }
 
-
-
 export function revokeTokenRequest() {
     return httpRequest("/api/revoke-token", {
         method: "POST",

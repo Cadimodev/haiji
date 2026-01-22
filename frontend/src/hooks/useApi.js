@@ -49,8 +49,6 @@ export function useApi() {
         });
     }, [authenticatedRequest]);
 
-    // Add other authed endpoints here as needed...
-
     return {
         getUserProfile,
         updateUserProfile,
