@@ -1,21 +1,33 @@
 import { API_BASE_URL } from "../config/api";
 
 let refreshInterceptor = null;
+let accessToken = null;
 
 export function registerAuthInterceptor(callback) {
     refreshInterceptor = callback;
+}
+
+export function setAccessToken(token) {
+    accessToken = token;
 }
 
 export async function httpRequest(url, options = {}) {
     // Helper to perform the actual fetch
     const doFetch = async (reqUrl, reqOptions) => {
         try {
+            const headers = {
+                ...(reqOptions.headers || {}),
+            };
+
+            // Inject token automatically if present and not already set
+            if (accessToken && !headers.Authorization) {
+                headers.Authorization = `Bearer ${accessToken}`;
+            }
+
             const finalOptions = {
                 ...reqOptions,
                 credentials: "include", // Important for cookies
-                headers: {
-                    ...(reqOptions.headers || {}),
-                },
+                headers,
             };
 
             const res = await fetch(reqUrl, finalOptions);

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from "react";
-import { httpRequest, registerAuthInterceptor } from "../utils/http"; // Import registerAuthInterceptor
+import { httpRequest, registerAuthInterceptor, setAccessToken } from "../utils/http"; // Import registerAuthInterceptor
 import { refreshTokenRequest, revokeTokenRequest } from "../services/authService";
 
 const UserContext = createContext();
@@ -47,6 +47,15 @@ export function UserProvider({ children }) {
             }
         });
     }, [logout]);
+
+    // Keep http.js token in sync with user state
+    useEffect(() => {
+        if (user?.token) {
+            setAccessToken(user.token);
+        } else {
+            setAccessToken(null);
+        }
+    }, [user]);
 
     useEffect(() => {
         const initializeUser = async () => {
