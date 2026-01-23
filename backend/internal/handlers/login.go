@@ -7,23 +7,15 @@ import (
 
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
+	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
 )
 
 func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
-	type parameters struct {
-		Password string `json:"password"`
-		Username string `json:"username"`
-	}
-	type response struct {
-		User
-		Token string `json:"token"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
+	params := dto.LoginRequest{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Couldn't decode parameters", err)
@@ -66,8 +58,8 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 
 	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
-	utils.RespondWithJSON(w, http.StatusOK, response{
-		User: User{
+	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
+		UserResponse: dto.UserResponse{
 			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt,

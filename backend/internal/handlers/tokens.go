@@ -8,14 +8,10 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 
 	"github.com/Cadimodev/haiji/backend/internal/config"
+	"github.com/Cadimodev/haiji/backend/internal/dto"
 )
 
 func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
-
-	type response struct {
-		User
-		Token string `json:"token"`
-	}
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
@@ -46,8 +42,8 @@ func HandlerRefreshToken(cfg *config.ApiConfig, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, response{
-		User: User{
+	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
+		UserResponse: dto.UserResponse{
 			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt,

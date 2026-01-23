@@ -13,23 +13,9 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
-	"github.com/google/uuid"
 )
 
-type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Username  string    `json:"username"`
-}
-
 func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
-
-	type response struct {
-		User
-		Token string `json:"token"`
-	}
 
 	decoder := json.NewDecoder(r.Body)
 	params := dto.CreateUserRequest{}
@@ -87,8 +73,8 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
-	utils.RespondWithJSON(w, http.StatusCreated, response{
-		User: User{
+	utils.RespondWithJSON(w, http.StatusCreated, dto.UserWithTokenResponse{
+		UserResponse: dto.UserResponse{
 			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt,
@@ -100,11 +86,6 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 }
 
 func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
-
-	type response struct {
-		User
-		Token string `json:"token"`
-	}
 
 	// Auth JWT
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
@@ -176,8 +157,8 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	utils.SetRefreshCookie(w, newRefresh, cfg.Platform != "dev")
 
-	utils.RespondWithJSON(w, http.StatusOK, response{
-		User: User{
+	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
+		UserResponse: dto.UserResponse{
 			ID:        user.ID,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
@@ -189,10 +170,6 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 }
 
 func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
-
-	type response struct {
-		User
-	}
 
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -206,13 +183,11 @@ func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, response{
-		User: User{
-			ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
-			Username:  user.Username,
-		},
+	utils.RespondWithJSON(w, http.StatusOK, dto.UserResponse{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Email:     user.Email,
+		Username:  user.Username,
 	})
 }
