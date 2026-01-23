@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/google/uuid"
@@ -48,9 +49,6 @@ func TestAuthService_Login(t *testing.T) {
 		users: make(map[string]database.User),
 	}
 
-	// We pass nil for dbConn because we aren't using transactions in Login
-	// (or we are mocking them out if we did, but Login doesn't use BeginTx)
-
 	authService := NewAuthService(nil, mockDB, "secret", "pepper", "dev")
 
 	// Case 1: User Not Found
@@ -67,7 +65,6 @@ func TestAuthService_Login(t *testing.T) {
 	}
 
 	// Case 2: Wrong Password
-	// We insert a dummy user with a random string as hash. argon2 check will fail.
 	mockDB.users["existing"] = database.User{
 		ID:             uuid.New(),
 		Username:       "existing",
@@ -87,5 +84,37 @@ func TestAuthService_Login(t *testing.T) {
 	}
 	if err.Error() != "incorrect username or password" {
 		t.Errorf("Expected 'incorrect username or password', got '%s'", err.Error())
+	}
+
+	// Case 3: Success
+	// We generate a REAL hash for a known password so auth.CheckPasswordHash works.
+	password := "correct_horse_battery_staple"
+	validHash, _ := auth.HashPassword(password)
+
+	mockDB.users["valid_user"] = database.User{
+		ID:             uuid.New(),
+		Username:       "valid_user",
+		HashedPassword: validHash,
+		Email:          "valid@example.com",
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	resp, refreshToken, err := authService.Login(context.Background(), dto.LoginRequest{
+		Username: "valid_user",
+		Password: password,
+	}, "user-agent", "127.0.0.1")
+
+	if err != nil {
+		t.Fatalf("Expected success, got error: %s", err)
+	}
+	if resp.Token == "" {
+		t.Error("Expected access token, got empty string")
+	}
+	if refreshToken == "" {
+		t.Error("Expected refresh token, got empty string")
+	}
+	if resp.UserResponse.Username != "valid_user" {
+		t.Errorf("Expected username 'valid_user', got '%s'", resp.UserResponse.Username)
 	}
 }
