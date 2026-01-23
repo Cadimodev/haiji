@@ -13,6 +13,8 @@ import (
 
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
+	"github.com/Cadimodev/haiji/backend/internal/game"
+	"github.com/Cadimodev/haiji/backend/internal/handlers"
 	"github.com/Cadimodev/haiji/backend/internal/router"
 	"github.com/Cadimodev/haiji/backend/internal/service"
 
@@ -31,11 +33,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
 	}
-	// Inject the DB query interface into the config
-	apiCFG.DB = database.New(dbConn)
-	apiCFG.AuthService = service.NewAuthService(apiCFG.DB, apiCFG.JWTSecret, string(apiCFG.RefreshPepper), apiCFG.Platform)
 
-	mux := router.New(apiCFG)
+	// Initialize dependencies
+	dbQueries := database.New(dbConn)
+	authService := service.NewAuthService(dbConn, dbQueries, apiCFG.JWTSecret, string(apiCFG.RefreshPepper), apiCFG.Platform)
+	hub := game.NewHub()
+	go hub.Run()
+
+	// Initialize handlers
+	userHandler := handlers.NewUserHandler(dbQueries, authService, apiCFG)
+	authHandler := handlers.NewAuthHandler(dbQueries, authService, apiCFG)
+	gameHandler := handlers.NewGameHandler(dbQueries, apiCFG, hub)
+	systemHandler := handlers.NewSystemHandler(dbQueries, apiCFG)
+
+	mux := router.New(apiCFG, userHandler, authHandler, gameHandler, systemHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + apiCFG.Port,

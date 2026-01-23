@@ -4,14 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Cadimodev/haiji/backend/internal/database"
-	"github.com/Cadimodev/haiji/backend/internal/service"
 	"github.com/joho/godotenv"
 )
 
 type ApiConfig struct {
-	DB            *database.Queries
-	AuthService   service.AuthService
 	JWTSecret     string
 	Platform      string
 	FilepathRoot  string

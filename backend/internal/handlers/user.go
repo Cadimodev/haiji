@@ -12,10 +12,25 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
+	"github.com/Cadimodev/haiji/backend/internal/service"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
 )
 
-func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
+type UserHandler struct {
+	db          *database.Queries
+	authService service.AuthService
+	config      *config.ApiConfig // Keep config for non-service things like Platform/JWTSecret if needed
+}
+
+func NewUserHandler(db *database.Queries, authService service.AuthService, cfg *config.ApiConfig) *UserHandler {
+	return &UserHandler{
+		db:          db,
+		authService: authService,
+		config:      cfg,
+	}
+}
+
+func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	params := dto.CreateUserRequest{}
@@ -36,7 +51,7 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		ipStr = ip.String()
 	}
 
-	response, refreshToken, err := cfg.AuthService.Register(r.Context(), params, userAgent, ipStr)
+	response, refreshToken, err := h.authService.Register(r.Context(), params, userAgent, ipStr)
 	if err != nil {
 		if database.IsUnique(err) {
 			utils.RespondWithErrorJSON(w, http.StatusConflict, "Email or username already in use", nil)
@@ -46,12 +61,12 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
+	utils.SetRefreshCookie(w, refreshToken, h.config.Platform != "dev")
 
 	utils.RespondWithJSON(w, http.StatusCreated, response)
 }
 
-func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Auth JWT
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
@@ -74,7 +89,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	email := params.Email
 
 	// Verify current pass
-	user, err := cfg.DB.GetUserByID(r.Context(), userID)
+	user, err := h.db.GetUserByID(r.Context(), userID)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
 		return
@@ -98,7 +113,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	}
 
 	// Update user
-	user, err = cfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
+	user, err = h.db.UpdateUser(r.Context(), database.UpdateUserParams{
 		ID:             userID,
 		Email:          email,
 		HashedPassword: hashedPassword,
@@ -115,13 +130,13 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 
 	// Revoke & generate new tokens
 	ip, userAgent := utils.GetClientInfo(r)
-	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(r.Context(), cfg.DB, userID, userAgent, ip, 60*24*time.Hour, cfg.JWTSecret, time.Hour, cfg.RefreshPepper)
+	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(r.Context(), h.db, userID, userAgent, ip, 60*24*time.Hour, h.config.JWTSecret, time.Hour, h.config.RefreshPepper)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't rotate session", err)
 		return
 	}
 
-	utils.SetRefreshCookie(w, newRefresh, cfg.Platform != "dev")
+	utils.SetRefreshCookie(w, newRefresh, h.config.Platform != "dev")
 
 	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
 		UserResponse: dto.UserResponse{
@@ -135,7 +150,7 @@ func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 	})
 }
 
-func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -143,7 +158,7 @@ func HandlerUserProfile(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	user, err := cfg.DB.GetUserByID(r.Context(), userID)
+	user, err := h.db.GetUserByID(r.Context(), userID)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid user", err)
 		return

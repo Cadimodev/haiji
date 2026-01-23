@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -20,14 +20,16 @@ type AuthService interface {
 }
 
 type authService struct {
+	dbConn        *sql.DB
 	db            *database.Queries
 	jwtSecret     string
 	refreshPepper string
 	platform      string
 }
 
-func NewAuthService(db *database.Queries, jwtSecret, refreshPepper, platform string) AuthService {
+func NewAuthService(dbConn *sql.DB, db *database.Queries, jwtSecret, refreshPepper, platform string) AuthService {
 	return &authService{
+		dbConn:        dbConn,
 		db:            db,
 		jwtSecret:     jwtSecret,
 		refreshPepper: refreshPepper,
@@ -55,7 +57,15 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
-	user, err := s.db.CreateUser(ctx, database.CreateUserParams{
+	tx, err := s.dbConn.BeginTx(ctx, nil)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+	defer tx.Rollback()
+
+	qtx := s.db.WithTx(tx)
+
+	user, err := qtx.CreateUser(ctx, database.CreateUserParams{
 		Email:          email,
 		HashedPassword: hashedPass,
 		Username:       username,
@@ -70,7 +80,6 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 		time.Hour,
 	)
 	if err != nil {
-		//TODO: In a complex project maybe we should rollback the user creation
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
@@ -82,7 +91,7 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 
 	refreshToken, err := sessions.IssueRefreshToken(
 		ctx,
-		s.db,
+		qtx, // Use transaction query interface
 		user.ID,
 		userAgent,
 		parsedIP,
@@ -90,6 +99,10 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 		[]byte(s.refreshPepper),
 	)
 	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+
+	if err = tx.Commit(); err != nil {
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
@@ -119,10 +132,6 @@ func (s *authService) Login(ctx context.Context, params dto.LoginRequest, userAg
 		time.Hour,
 	)
 	if err != nil {
-		// Rollback: Delete user if token generation fails to avoid zombie users
-		if deleteErr := s.db.DeleteUser(ctx, user.ID); deleteErr != nil {
-			log.Printf("CRITICAL: Failed to rollback user %s: %v", user.ID, deleteErr)
-		}
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
