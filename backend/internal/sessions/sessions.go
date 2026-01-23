@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func IssueRefreshToken(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, ttl time.Duration, refreshPepper []byte) (string, error) {
+func IssueRefreshToken(ctx context.Context, q database.Querier, userID uuid.UUID, ua string, ip net.IP, ttl time.Duration, refreshPepper []byte) (string, error) {
 
 	tokenHex, raw, err := auth.MakeRefreshTokenPair()
 	if err != nil {
@@ -33,7 +33,7 @@ func IssueRefreshToken(ctx context.Context, q *database.Queries, userID uuid.UUI
 	return tokenHex, nil
 }
 
-func RevokeAllAndIssueNewSession(ctx context.Context, q *database.Queries, userID uuid.UUID, ua string, ip net.IP, refreshTTL time.Duration, jwtSecret string, accessTTL time.Duration, refreshPepper []byte) (access string, refresh string, err error) {
+func RevokeAllAndIssueNewSession(ctx context.Context, q database.Querier, userID uuid.UUID, ua string, ip net.IP, refreshTTL time.Duration, jwtSecret string, accessTTL time.Duration, refreshPepper []byte) (access string, refresh string, err error) {
 
 	_ = q.RevokeAllRefreshTokensForUser(ctx, userID)
 	refresh, err = IssueRefreshToken(ctx, q, userID, ua, ip, refreshTTL, refreshPepper)

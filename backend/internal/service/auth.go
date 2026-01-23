@@ -21,13 +21,13 @@ type AuthService interface {
 
 type authService struct {
 	dbConn        *sql.DB
-	db            *database.Queries
+	db            database.Querier
 	jwtSecret     string
 	refreshPepper string
 	platform      string
 }
 
-func NewAuthService(dbConn *sql.DB, db *database.Queries, jwtSecret, refreshPepper, platform string) AuthService {
+func NewAuthService(dbConn *sql.DB, db database.Querier, jwtSecret, refreshPepper, platform string) AuthService {
 	return &authService{
 		dbConn:        dbConn,
 		db:            db,
@@ -63,7 +63,10 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 	}
 	defer tx.Rollback()
 
-	qtx := s.db.WithTx(tx)
+	var qtx database.Querier = s.db
+	if q, ok := s.db.(*database.Queries); ok {
+		qtx = q.WithTx(tx)
+	}
 
 	user, err := qtx.CreateUser(ctx, database.CreateUserParams{
 		Email:          email,
