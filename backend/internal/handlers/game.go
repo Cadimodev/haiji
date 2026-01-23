@@ -7,6 +7,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
+	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/game"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 )
@@ -33,11 +34,7 @@ func (h *GameHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse body
-	type req struct {
-		Duration int      `json:"duration"`
-		Groups   []string `json:"groups"`
-	}
-	var params req
+	var params dto.CreateRoomRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
