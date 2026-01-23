@@ -9,6 +9,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/game"
+	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
 	"github.com/Cadimodev/haiji/backend/internal/middleware"
 )
 
@@ -37,6 +38,11 @@ func (h *GameHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	var params dto.CreateRoomRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if err := utils.ValidateStruct(params); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
