@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -74,8 +75,6 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 	}
 
 	// Refresh Token
-
-	// Refresh Token
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
 		parsedIP = net.IP{127, 0, 0, 1}
@@ -120,10 +119,13 @@ func (s *authService) Login(ctx context.Context, params dto.LoginRequest, userAg
 		time.Hour,
 	)
 	if err != nil {
+		// Rollback: Delete user if token generation fails to avoid zombie users
+		if deleteErr := s.db.DeleteUser(ctx, user.ID); deleteErr != nil {
+			log.Printf("CRITICAL: Failed to rollback user %s: %v", user.ID, deleteErr)
+		}
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
-	// Refresh Token
 	// Refresh Token
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
