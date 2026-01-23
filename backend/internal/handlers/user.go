@@ -30,20 +30,13 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	email := strings.ToLower(strings.TrimSpace(params.Email))
-	username := strings.TrimSpace(params.Username)
-
-	hashedPass, err := auth.HashPassword(params.Password)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't hash password", err)
-		return
+	ip, userAgent := utils.GetClientInfo(r)
+	ipStr := ""
+	if ip != nil {
+		ipStr = ip.String()
 	}
 
-	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-		Email:          email,
-		HashedPassword: hashedPass,
-		Username:       username,
-	})
+	response, refreshToken, err := cfg.AuthService.Register(r.Context(), params, userAgent, ipStr)
 	if err != nil {
 		if database.IsUnique(err) {
 			utils.RespondWithErrorJSON(w, http.StatusConflict, "Email or username already in use", nil)
@@ -53,36 +46,9 @@ func HandlerUserCreate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	accessToken, err := auth.MakeJWT(
-		user.ID,
-		cfg.JWTSecret,
-		time.Hour,
-	)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create access JWT", err)
-		return
-	}
-
-	ip, userAgent := utils.GetClientInfo(r)
-
-	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour, cfg.RefreshPepper)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
-		return
-	}
-
 	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
-	utils.RespondWithJSON(w, http.StatusCreated, dto.UserWithTokenResponse{
-		UserResponse: dto.UserResponse{
-			ID:        user.ID,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Username:  user.Username,
-		},
-		Token: accessToken,
-	})
+	utils.RespondWithJSON(w, http.StatusCreated, response)
 }
 
 func HandlerUserUpdate(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {

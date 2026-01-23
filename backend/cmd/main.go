@@ -14,6 +14,7 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/router"
+	"github.com/Cadimodev/haiji/backend/internal/service"
 
 	_ "github.com/lib/pq"
 )
@@ -32,6 +33,7 @@ func main() {
 	}
 	// Inject the DB query interface into the config
 	apiCFG.DB = database.New(dbConn)
+	apiCFG.AuthService = service.NewAuthService(apiCFG.DB, apiCFG.JWTSecret, string(apiCFG.RefreshPepper), apiCFG.Platform)
 
 	mux := router.New(apiCFG)
 

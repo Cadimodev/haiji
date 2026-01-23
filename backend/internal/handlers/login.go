@@ -3,13 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/handlers/utils"
-	"github.com/Cadimodev/haiji/backend/internal/sessions"
 )
 
 func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
@@ -22,50 +19,19 @@ func HandlerLogin(cfg *config.ApiConfig, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := cfg.DB.GetUserByUsername(r.Context(), params.Username)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
-		return
-	}
-
-	result, err := auth.CheckPasswordHash(params.Password, user.HashedPassword)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", err)
-		return
-	}
-	if !result {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Incorrect username or password", nil)
-		return
-	}
-
-	accessToken, err := auth.MakeJWT(
-		user.ID,
-		cfg.JWTSecret,
-		time.Hour,
-	)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't create access JWT", err)
-		return
-	}
-
 	ip, userAgent := utils.GetClientInfo(r)
+	ipStr := ""
+	if ip != nil {
+		ipStr = ip.String()
+	}
 
-	refreshToken, err := sessions.IssueRefreshToken(r.Context(), cfg.DB, user.ID, userAgent, ip, 60*24*time.Hour, cfg.RefreshPepper)
+	response, refreshToken, err := cfg.AuthService.Login(r.Context(), params, userAgent, ipStr)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
+		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, err.Error(), nil)
 		return
 	}
 
 	utils.SetRefreshCookie(w, refreshToken, cfg.Platform != "dev")
 
-	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
-		UserResponse: dto.UserResponse{
-			ID:        user.ID,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Username:  user.Username,
-		},
-		Token: accessToken,
-	})
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
