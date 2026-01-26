@@ -59,8 +59,8 @@ func (m *MockQuerier) RevokeRefreshTokenByHash(ctx context.Context, tokenHash []
 		delete(m.refreshTokens, key)
 		return nil
 	}
-	return nil // Idempotent or error depending on requirements, usually update returns nil if no rows updated but sqlc might differ.
-	// Actually sqlc Exec returns error only on DB failure.
+	return nil
+
 }
 
 func (m *MockQuerier) GetUserByID(ctx context.Context, id uuid.UUID) (database.User, error) {
@@ -188,5 +188,62 @@ func TestAuthHandler_RevokeToken(t *testing.T) {
 	// Verify it's gone from DB
 	if _, ok := mockDB.refreshTokens[string(hash)]; ok {
 		t.Error("Token should have been removed/revoked from mock DB")
+	}
+}
+
+func TestAuthHandler_ValidateToken(t *testing.T) {
+	// Setup
+	mockDB := &MockQuerier{
+		users:         make(map[string]database.User),
+		refreshTokens: make(map[string]database.RefreshToken),
+	}
+	mockAuthService := &MockAuthService{}
+	cfg := &config.ApiConfig{
+		JWTSecret:     "secret_for_validation",
+		RefreshPepper: []byte("pepper"),
+		Platform:      "dev",
+	}
+
+	handler := NewAuthHandler(mockDB, mockAuthService, cfg)
+
+	// Create a valid user
+	userID := uuid.New()
+	mockDB.users[userID.String()] = database.User{ID: userID, Username: "valid"}
+
+	// Generate a valid JWT
+	validToken, _ := auth.MakeJWT(userID, cfg.JWTSecret, time.Hour)
+
+	// Case 1: Valid Token
+	req, _ := http.NewRequest("GET", "/api/validate-token", nil)
+	req.Header.Set("Authorization", "Bearer "+validToken)
+	rr := httptest.NewRecorder()
+
+	handler.ValidateToken(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for valid token, got %d. Body: %s", rr.Code, rr.Body.String())
+	}
+
+	// Case 2: Missing Header
+	req2, _ := http.NewRequest("GET", "/api/validate-token", nil)
+	rr2 := httptest.NewRecorder()
+
+	handler.ValidateToken(rr2, req2)
+
+	if rr2.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 BadRequest for missing header, got %d", rr2.Code)
+	}
+
+	// Case 3: Invalid Token Signature
+	// Generate token with different secret
+	faketoken, _ := auth.MakeJWT(userID, "wrong_secret", time.Hour)
+	req3, _ := http.NewRequest("GET", "/api/validate-token", nil)
+	req3.Header.Set("Authorization", "Bearer "+faketoken)
+	rr3 := httptest.NewRecorder()
+
+	handler.ValidateToken(rr3, req3)
+
+	if rr3.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401 Unauthorized for invalid signature, got %d", rr3.Code)
 	}
 }
