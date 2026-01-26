@@ -17,12 +17,12 @@ import (
 )
 
 type UserHandler struct {
-	db          *database.Queries
+	db          database.Querier
 	authService service.AuthService
 	config      *config.ApiConfig // Keep config for non-service things like Platform/JWTSecret if needed
 }
 
-func NewUserHandler(db *database.Queries, authService service.AuthService, cfg *config.ApiConfig) *UserHandler {
+func NewUserHandler(db database.Querier, authService service.AuthService, cfg *config.ApiConfig) *UserHandler {
 	return &UserHandler{
 		db:          db,
 		authService: authService,
