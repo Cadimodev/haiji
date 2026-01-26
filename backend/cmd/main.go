@@ -36,7 +36,8 @@ func main() {
 
 	// Initialize dependencies
 	dbQueries := database.New(dbConn)
-	authService := service.NewAuthService(dbConn, dbQueries, apiCFG.JWTSecret, string(apiCFG.RefreshPepper), apiCFG.Platform)
+	txManager := database.NewSqlTxManager(dbConn)
+	authService := service.NewAuthService(txManager, dbQueries, apiCFG.JWTSecret, string(apiCFG.RefreshPepper), apiCFG.Platform)
 	hub := game.NewHub()
 	go hub.Run()
 

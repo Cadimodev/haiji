@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"net"
 	"strings"
@@ -20,16 +19,16 @@ type AuthService interface {
 }
 
 type authService struct {
-	dbConn        *sql.DB
+	txManager     database.TxManager
 	db            database.Querier
 	jwtSecret     string
 	refreshPepper string
 	platform      string
 }
 
-func NewAuthService(dbConn *sql.DB, db database.Querier, jwtSecret, refreshPepper, platform string) AuthService {
+func NewAuthService(txManager database.TxManager, db database.Querier, jwtSecret, refreshPepper, platform string) AuthService {
 	return &authService{
-		dbConn:        dbConn,
+		txManager:     txManager,
 		db:            db,
 		jwtSecret:     jwtSecret,
 		refreshPepper: refreshPepper,
@@ -57,62 +56,61 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
-	tx, err := s.dbConn.BeginTx(ctx, nil)
-	if err != nil {
-		return dto.UserWithTokenResponse{}, "", err
-	}
-	defer tx.Rollback()
+	var response dto.UserWithTokenResponse
+	var refreshToken string
 
-	var qtx database.Querier = s.db
-	if q, ok := s.db.(*database.Queries); ok {
-		qtx = q.WithTx(tx)
-	}
+	err = s.txManager.ExecTx(ctx, func(qtx database.Querier) error {
+		user, err := qtx.CreateUser(ctx, database.CreateUserParams{
+			Email:          email,
+			HashedPassword: hashedPass,
+			Username:       username,
+		})
+		if err != nil {
+			return err
+		}
 
-	user, err := qtx.CreateUser(ctx, database.CreateUserParams{
-		Email:          email,
-		HashedPassword: hashedPass,
-		Username:       username,
+		accessToken, err := auth.MakeJWT(
+			user.ID,
+			s.jwtSecret,
+			time.Hour,
+		)
+		if err != nil {
+			return err
+		}
+
+		// Refresh Token
+		parsedIP := net.ParseIP(ip)
+		if parsedIP == nil {
+			parsedIP = net.IP{127, 0, 0, 1}
+		}
+
+		rt, err := sessions.IssueRefreshToken(
+			ctx,
+			qtx, // Use transaction query interface
+			user.ID,
+			userAgent,
+			parsedIP,
+			60*24*time.Hour,
+			[]byte(s.refreshPepper),
+		)
+		if err != nil {
+			return err
+		}
+
+		response = dto.UserWithTokenResponse{
+			UserResponse: userToResponse(user),
+			Token:        accessToken,
+		}
+		refreshToken = rt
+
+		return nil
 	})
+
 	if err != nil {
 		return dto.UserWithTokenResponse{}, "", err
 	}
 
-	accessToken, err := auth.MakeJWT(
-		user.ID,
-		s.jwtSecret,
-		time.Hour,
-	)
-	if err != nil {
-		return dto.UserWithTokenResponse{}, "", err
-	}
-
-	// Refresh Token
-	parsedIP := net.ParseIP(ip)
-	if parsedIP == nil {
-		parsedIP = net.IP{127, 0, 0, 1}
-	}
-
-	refreshToken, err := sessions.IssueRefreshToken(
-		ctx,
-		qtx, // Use transaction query interface
-		user.ID,
-		userAgent,
-		parsedIP,
-		60*24*time.Hour,
-		[]byte(s.refreshPepper),
-	)
-	if err != nil {
-		return dto.UserWithTokenResponse{}, "", err
-	}
-
-	if err = tx.Commit(); err != nil {
-		return dto.UserWithTokenResponse{}, "", err
-	}
-
-	return dto.UserWithTokenResponse{
-		UserResponse: userToResponse(user),
-		Token:        accessToken,
-	}, refreshToken, nil
+	return response, refreshToken, nil
 }
 
 func (s *authService) Login(ctx context.Context, params dto.LoginRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
