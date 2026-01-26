@@ -71,6 +71,7 @@ export function UserProvider({ children }) {
             }
 
             const { ok, data } = await refreshTokenRequest();
+            console.log("TEST DEBUG: refreshToken request result:", { ok, data });
 
             if (ok && data?.token) {
                 const userId = data.id || parsedUser?.id;
