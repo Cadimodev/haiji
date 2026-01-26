@@ -14,12 +14,12 @@ import (
 )
 
 type AuthHandler struct {
-	db          *database.Queries
+	db          database.Querier
 	authService service.AuthService
 	config      *config.ApiConfig
 }
 
-func NewAuthHandler(db *database.Queries, authService service.AuthService, cfg *config.ApiConfig) *AuthHandler {
+func NewAuthHandler(db database.Querier, authService service.AuthService, cfg *config.ApiConfig) *AuthHandler {
 	return &AuthHandler{
 		db:          db,
 		authService: authService,
