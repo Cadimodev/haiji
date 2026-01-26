@@ -87,10 +87,6 @@ describe("LoginPage", () => {
         fireEvent.click(screen.getByRole("button", { name: /Log in/i }));
 
         await waitFor(() => {
-            // Adjust based on how error is displayed (alert, text, etc)
-            // If using standard alert:
-            // expect(window.alert).toHaveBeenCalledWith("Invalid credentials");
-            // Or if text on screen:
             expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();
         });
     });
