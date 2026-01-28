@@ -14,12 +14,12 @@ import (
 )
 
 type GameHandler struct {
-	db     *database.Queries
+	db     database.Querier
 	config *config.ApiConfig
 	hub    *game.Hub
 }
 
-func NewGameHandler(db *database.Queries, cfg *config.ApiConfig, hub *game.Hub) *GameHandler {
+func NewGameHandler(db database.Querier, cfg *config.ApiConfig, hub *game.Hub) *GameHandler {
 	return &GameHandler{
 		db:     db,
 		config: cfg,

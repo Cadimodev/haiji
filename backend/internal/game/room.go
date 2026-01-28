@@ -245,8 +245,7 @@ func (r *Room) handleRoomMessage(client *Client, msg []byte) {
 				}
 
 				if p, ok := r.Players[client.UserID]; ok {
-					p.Score = payload.Score // Or increment? Trusting client for now (within limits).
-					// Broadcast score update?
+					p.Score = payload.Score // Trusting client for now.
 					r.broadcastScores()
 				}
 			}
