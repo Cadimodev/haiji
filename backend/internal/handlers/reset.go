@@ -8,11 +8,11 @@ import (
 )
 
 type SystemHandler struct {
-	db     *database.Queries
+	db     database.Querier
 	config *config.ApiConfig
 }
 
-func NewSystemHandler(db *database.Queries, cfg *config.ApiConfig) *SystemHandler {
+func NewSystemHandler(db database.Querier, cfg *config.ApiConfig) *SystemHandler {
 	return &SystemHandler{
 		db:     db,
 		config: cfg,
