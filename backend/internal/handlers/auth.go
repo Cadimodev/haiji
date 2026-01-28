@@ -36,6 +36,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := utils.ValidateStruct(params); err != nil {
+		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Invalid request payload", err)
+		return
+	}
+
 	ip, userAgent := utils.GetClientInfo(r)
 	ipStr := ""
 	if ip != nil {

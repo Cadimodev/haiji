@@ -43,8 +43,7 @@ type Room struct {
 	unregister   chan *Client
 	stopGame     chan bool
 	timeFinished chan bool
-	// getValues replaced by generic action channel
-	action chan func() // Closure pattern for actions
+	action       chan func() // Closure pattern for actions
 }
 
 type RoomValues struct {
@@ -239,8 +238,14 @@ func (r *Room) handleRoomMessage(client *Client, msg []byte) {
 
 		case "SUBMIT_SCORE":
 			if r.State == StatePlaying {
+				// Sanity Check: Prevent negative or unrealistic scores
+				if payload.Score < 0 || payload.Score > 9999 {
+					log.Printf("Potential hack attempt in room %s: User %s submitted invalid score %d", r.Code, client.UserID, payload.Score)
+					return
+				}
+
 				if p, ok := r.Players[client.UserID]; ok {
-					p.Score = payload.Score // Or increment? Trusting client for now.
+					p.Score = payload.Score // Or increment? Trusting client for now (within limits).
 					// Broadcast score update?
 					r.broadcastScores()
 				}

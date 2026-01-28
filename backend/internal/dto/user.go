@@ -20,8 +20,8 @@ type UpdateUserRequest struct {
 }
 
 type LoginRequest struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
+	Password string `json:"password" validate:"required"`
+	Username string `json:"username" validate:"required"`
 }
 
 type UserResponse struct {

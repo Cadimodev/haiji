@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -80,6 +81,27 @@ func (m *MockQuerier) GetUserByID(ctx context.Context, id uuid.UUID) (database.U
 }
 
 // --- Tests ---
+
+func TestAuthHandler_Login_Validation(t *testing.T) {
+	// Setup
+	mockDB := &MockQuerier{}
+	mockAuthService := &MockAuthService{}
+	cfg := &config.ApiConfig{}
+
+	handler := NewAuthHandler(mockDB, mockAuthService, cfg)
+
+	// Case: Invalid Input (Empty fields)
+	// We send an empty JSON object, which should fail the "required" validation
+	jsonBody := `{"username": "", "password": ""}`
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBufferString(jsonBody))
+	rr := httptest.NewRecorder()
+
+	handler.Login(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 Bad Request for invalid input, got %d. Body: %s", rr.Code, rr.Body.String())
+	}
+}
 
 func TestAuthHandler_RefreshToken(t *testing.T) {
 	// Setup

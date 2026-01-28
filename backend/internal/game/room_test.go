@@ -178,3 +178,44 @@ func TestRoom_ScoreUpdate(t *testing.T) {
 		t.Error("Did not receive SCORE_UPDATE")
 	}
 }
+
+func TestRoom_SubmitScore_Validation(t *testing.T) {
+	hub := NewHub()
+	hostID := uuid.New()
+	room := NewRoom("TEST_SEC", hub, 60, []string{"group1"}, hostID)
+	room.State = StatePlaying
+
+	pID := uuid.New()
+	room.Players[pID] = &Player{UserID: pID, Username: "Hacker", Score: 0}
+
+	c1 := newMockClient(hub, pID, "Hacker")
+	room.Clients[c1] = true
+	c1.Room = room
+
+	go room.Run()
+	defer func() { room.stopGame <- true }()
+
+	// 1. Try Negative Score
+	badMsg1, _ := json.Marshal(map[string]interface{}{
+		"type":  "SUBMIT_SCORE",
+		"score": -500,
+	})
+	room.handleRoomMessage(c1, badMsg1)
+	time.Sleep(10 * time.Millisecond)
+
+	if room.Players[pID].Score != 0 {
+		t.Errorf("Score should remain 0 after negative submission, got %d", room.Players[pID].Score)
+	}
+
+	// 2. Try Huge Score
+	badMsg2, _ := json.Marshal(map[string]interface{}{
+		"type":  "SUBMIT_SCORE",
+		"score": 999999,
+	})
+	room.handleRoomMessage(c1, badMsg2)
+	time.Sleep(10 * time.Millisecond)
+
+	if room.Players[pID].Score != 0 {
+		t.Errorf("Score should remain 0 after huge submission, got %d", room.Players[pID].Score)
+	}
+}
