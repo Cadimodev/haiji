@@ -11,11 +11,16 @@ import (
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
 	"github.com/Cadimodev/haiji/backend/internal/sessions"
+	"github.com/google/uuid"
 )
 
 type AuthService interface {
 	Register(ctx context.Context, params dto.CreateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
 	Login(ctx context.Context, params dto.LoginRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
+	UpdateUser(ctx context.Context, userID uuid.UUID, params dto.UpdateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
+	RefreshToken(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error)
+	RevokeToken(ctx context.Context, refreshTokenHex string) error
+	GetUser(ctx context.Context, userID uuid.UUID) (dto.UserResponse, error)
 }
 
 type authService struct {
@@ -86,7 +91,7 @@ func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest
 
 		rt, err := sessions.IssueRefreshToken(
 			ctx,
-			qtx, // Use transaction query interface
+			qtx,
 			user.ID,
 			userAgent,
 			parsedIP,
@@ -159,4 +164,114 @@ func (s *authService) Login(ctx context.Context, params dto.LoginRequest, userAg
 		UserResponse: userToResponse(user),
 		Token:        accessToken,
 	}, refreshToken, nil
+}
+
+func (s *authService) UpdateUser(ctx context.Context, userID uuid.UUID, params dto.UpdateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
+	email := strings.ToLower(strings.TrimSpace(params.Email))
+	username := strings.TrimSpace(params.Username)
+
+	user, err := s.db.GetUserByID(ctx, userID)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", errors.New("incorrect username or password")
+	}
+
+	result, err := auth.CheckPasswordHash(params.OldPassword, user.HashedPassword)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", errors.New("incorrect username or password")
+	}
+	if !result {
+		return dto.UserWithTokenResponse{}, "", errors.New("incorrect username or password")
+	}
+
+	hashedPassword, err := auth.HashPassword(params.NewPassword)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+
+	user, err = s.db.UpdateUser(ctx, database.UpdateUserParams{
+		ID:             userID,
+		Email:          email,
+		HashedPassword: hashedPassword,
+		Username:       username,
+	})
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+
+	// Rotate session
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		parsedIP = net.IP{127, 0, 0, 1}
+	}
+
+	newAccess, newRefresh, err := sessions.RevokeAllAndIssueNewSession(
+		ctx,
+		s.db,
+		userID,
+		userAgent,
+		parsedIP,
+		60*24*time.Hour,
+		s.jwtSecret,
+		time.Hour,
+		[]byte(s.refreshPepper),
+	)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+
+	return dto.UserWithTokenResponse{
+		UserResponse: userToResponse(user),
+		Token:        newAccess,
+	}, newRefresh, nil
+}
+
+func (s *authService) RefreshToken(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error) {
+	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, []byte(s.refreshPepper))
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", errors.New("malformed token")
+	}
+
+	user, err := s.db.GetUserFromRefreshTokenHash(ctx, hash)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", errors.New("invalid or expired refresh token")
+	}
+
+	accessToken, err := auth.MakeJWT(
+		user.ID,
+		s.jwtSecret,
+		time.Hour,
+	)
+	if err != nil {
+		return dto.UserWithTokenResponse{}, "", err
+	}
+
+	// We purposely don't rotate the refresh token on every access token refresh
+	// to avoid race conditions in the frontend (e.g. parallel requests invalidating each other).
+	// Returning an empty string signals the handler to keep the existing cookie.
+
+	return dto.UserWithTokenResponse{
+		UserResponse: userToResponse(user),
+		Token:        accessToken,
+	}, "", nil
+}
+
+func (s *authService) RevokeToken(ctx context.Context, refreshTokenHex string) error {
+	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, []byte(s.refreshPepper))
+	if err != nil {
+		return errors.New("malformed token")
+	}
+
+	err = s.db.RevokeRefreshTokenByHash(ctx, hash)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *authService) GetUser(ctx context.Context, userID uuid.UUID) (dto.UserResponse, error) {
+	user, err := s.db.GetUserByID(ctx, userID)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+	return userToResponse(user), nil
 }

@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
@@ -63,38 +62,20 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 	refreshTokenHex := cookie.Value
 
-	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, h.config.RefreshPepper)
+	response, _, err := h.authService.RefreshToken(r.Context(), refreshTokenHex)
 	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Malformed token", err)
+		if err.Error() == "malformed token" {
+			utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Malformed token", err)
+		} else {
+			utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid or expired refresh token", err)
+		}
 		return
 	}
 
-	user, err := h.db.GetUserFromRefreshTokenHash(r.Context(), hash)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid or expired refresh token", err)
-		return
-	}
+	// The service returns an empty string if the refresh token wasn't rotated (to prevent race conditions).
+	// Therefore, we don't need to update the cookie here.
 
-	accessToken, err := auth.MakeJWT(
-		user.ID,
-		h.config.JWTSecret,
-		time.Hour,
-	)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't validate token", err)
-		return
-	}
-
-	utils.RespondWithJSON(w, http.StatusOK, dto.UserWithTokenResponse{
-		UserResponse: dto.UserResponse{
-			ID:        user.ID,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Username:  user.Username,
-		},
-		Token: accessToken,
-	})
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
@@ -107,13 +88,7 @@ func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
 	}
 	refreshTokenHex := cookie.Value
 
-	hash, err := auth.HashPresentedRefreshHex(refreshTokenHex, h.config.RefreshPepper)
-	if err != nil {
-		utils.RespondWithErrorJSON(w, http.StatusBadRequest, "Malformed token", err)
-		return
-	}
-
-	err = h.db.RevokeRefreshTokenByHash(r.Context(), hash)
+	err = h.authService.RevokeToken(r.Context(), refreshTokenHex)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusInternalServerError, "Couldn't revoke session", err)
 		return
@@ -137,7 +112,7 @@ func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.db.GetUserByID(r.Context(), userID)
+	_, err = h.authService.GetUser(r.Context(), userID)
 	if err != nil {
 		utils.RespondWithErrorJSON(w, http.StatusUnauthorized, "Invalid user", err)
 		return

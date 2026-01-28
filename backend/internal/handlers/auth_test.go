@@ -18,15 +18,54 @@ import (
 // --- Mocks ---
 
 type MockAuthService struct {
-	// Add fields if we need to mock Login/Register responses
+	RegisterFn     func(ctx context.Context, params dto.CreateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
+	LoginFn        func(ctx context.Context, params dto.LoginRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
+	UpdateUserFn   func(ctx context.Context, userID uuid.UUID, params dto.UpdateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error)
+	RefreshTokenFn func(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error)
+	RevokeTokenFn  func(ctx context.Context, refreshTokenHex string) error
+	GetUserFn      func(ctx context.Context, userID uuid.UUID) (dto.UserResponse, error)
 }
 
 func (m *MockAuthService) Register(ctx context.Context, params dto.CreateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
+	if m.RegisterFn != nil {
+		return m.RegisterFn(ctx, params, userAgent, ip)
+	}
 	return dto.UserWithTokenResponse{}, "", nil
 }
 
 func (m *MockAuthService) Login(ctx context.Context, params dto.LoginRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
+	if m.LoginFn != nil {
+		return m.LoginFn(ctx, params, userAgent, ip)
+	}
 	return dto.UserWithTokenResponse{}, "", nil
+}
+
+func (m *MockAuthService) UpdateUser(ctx context.Context, userID uuid.UUID, params dto.UpdateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
+	if m.UpdateUserFn != nil {
+		return m.UpdateUserFn(ctx, userID, params, userAgent, ip)
+	}
+	return dto.UserWithTokenResponse{}, "", nil
+}
+
+func (m *MockAuthService) RefreshToken(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error) {
+	if m.RefreshTokenFn != nil {
+		return m.RefreshTokenFn(ctx, refreshTokenHex)
+	}
+	return dto.UserWithTokenResponse{}, "", nil
+}
+
+func (m *MockAuthService) RevokeToken(ctx context.Context, refreshTokenHex string) error {
+	if m.RevokeTokenFn != nil {
+		return m.RevokeTokenFn(ctx, refreshTokenHex)
+	}
+	return nil
+}
+
+func (m *MockAuthService) GetUser(ctx context.Context, userID uuid.UUID) (dto.UserResponse, error) {
+	if m.GetUserFn != nil {
+		return m.GetUserFn(ctx, userID)
+	}
+	return dto.UserResponse{}, nil
 }
 
 type MockQuerier struct {
@@ -35,51 +74,16 @@ type MockQuerier struct {
 	refreshTokens map[string]database.RefreshToken
 }
 
-func (m *MockQuerier) GetUserFromRefreshTokenHash(ctx context.Context, tokenHash []byte) (database.User, error) {
-	for _, rt := range m.refreshTokens {
-		// In a real mock we'd compare hashes properly or map by hash.
-		// For simplicity, let's assume the map key IS the hash string for this test.
-		if string(rt.TokenHash) == string(tokenHash) {
-			// Found token, now find user
-			for _, u := range m.users {
-				if u.ID == rt.UserID {
-					return u, nil
-				}
-			}
-		}
-	}
-	return database.User{}, errors.New("not found")
-}
-
-func (m *MockQuerier) RevokeRefreshTokenByHash(ctx context.Context, tokenHash []byte) error {
-	// verify it exists
-	key := string(tokenHash)
-	if _, ok := m.refreshTokens[key]; ok {
-		// "Revoke" it
-		delete(m.refreshTokens, key)
-		return nil
-	}
-	return nil
-
-}
-
+// Stub implementation for MockQuerier as it is still required by interface
 func (m *MockQuerier) GetUserByID(ctx context.Context, id uuid.UUID) (database.User, error) {
-	for _, u := range m.users {
-		if u.ID == id {
-			return u, nil
-		}
-	}
-	return database.User{}, errors.New("not found")
+	return database.User{}, nil
 }
 
 // --- Tests ---
 
 func TestAuthHandler_RefreshToken(t *testing.T) {
 	// Setup
-	mockDB := &MockQuerier{
-		users:         make(map[string]database.User),
-		refreshTokens: make(map[string]database.RefreshToken),
-	}
+	mockDB := &MockQuerier{}
 	mockAuthService := &MockAuthService{}
 	cfg := &config.ApiConfig{
 		JWTSecret:     "secret",
@@ -89,28 +93,19 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 
 	handler := NewAuthHandler(mockDB, mockAuthService, cfg)
 
-	// Prepare Data
-	userID := uuid.New()
-	user := database.User{
-		ID:        userID,
-		Email:     "test@example.com",
-		Username:  "tester",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	mockDB.users[userID.String()] = user
-
-	rawToken := "a1b2c3d4e5f6"
-	hash, _ := auth.HashPresentedRefreshHex(rawToken, cfg.RefreshPepper)
-
-	mockDB.refreshTokens[string(hash)] = database.RefreshToken{
-		UserID:    userID,
-		TokenHash: hash, // In real DB this is []byte, mock handles it
-	}
+	rawToken := "valid_token"
 
 	// Case 1: Success
+	mockAuthService.RefreshTokenFn = func(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error) {
+		if refreshTokenHex != rawToken {
+			return dto.UserWithTokenResponse{}, "", errors.New("invalid token")
+		}
+		return dto.UserWithTokenResponse{
+			Token: "new_access_token",
+		}, "", nil
+	}
+
 	req, _ := http.NewRequest("POST", "/api/refresh", nil)
-	// Add Cookie
 	req.AddCookie(&http.Cookie{
 		Name:  "refresh_token",
 		Value: rawToken,
@@ -133,11 +128,15 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 		t.Errorf("Expected 401 Unauthorized for missing cookie, got %d", rr2.Code)
 	}
 
-	// Case 3: Invalid Token (Not in DB)
+	// Case 3: Invalid Token (Service Error)
+	mockAuthService.RefreshTokenFn = func(ctx context.Context, refreshTokenHex string) (dto.UserWithTokenResponse, string, error) {
+		return dto.UserWithTokenResponse{}, "", errors.New("invalid or expired refresh token")
+	}
+
 	req3, _ := http.NewRequest("POST", "/api/refresh", nil)
 	req3.AddCookie(&http.Cookie{
 		Name:  "refresh_token",
-		Value: "1234567890abcdef", // Valid hex, but not in DB
+		Value: "invalid_token",
 	})
 	rr3 := httptest.NewRecorder()
 
@@ -150,10 +149,7 @@ func TestAuthHandler_RefreshToken(t *testing.T) {
 
 func TestAuthHandler_RevokeToken(t *testing.T) {
 	// Setup
-	mockDB := &MockQuerier{
-		users:         make(map[string]database.User),
-		refreshTokens: make(map[string]database.RefreshToken),
-	}
+	mockDB := &MockQuerier{}
 	mockAuthService := &MockAuthService{}
 	cfg := &config.ApiConfig{
 		JWTSecret:     "secret",
@@ -163,15 +159,18 @@ func TestAuthHandler_RevokeToken(t *testing.T) {
 
 	handler := NewAuthHandler(mockDB, mockAuthService, cfg)
 
-	rawToken := "112233445566"
-	hash, _ := auth.HashPresentedRefreshHex(rawToken, cfg.RefreshPepper)
+	rawToken := "valid_token"
 
-	// Add to DB
-	mockDB.refreshTokens[string(hash)] = database.RefreshToken{
-		TokenHash: hash,
+	// Case: Success
+	revoked := false
+	mockAuthService.RevokeTokenFn = func(ctx context.Context, refreshTokenHex string) error {
+		if refreshTokenHex == rawToken {
+			revoked = true
+			return nil
+		}
+		return errors.New("not found")
 	}
 
-	// Request
 	req, _ := http.NewRequest("POST", "/api/revoke", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  "refresh_token",
@@ -184,19 +183,14 @@ func TestAuthHandler_RevokeToken(t *testing.T) {
 	if rr.Code != http.StatusNoContent {
 		t.Errorf("Expected 204 No Content, got %d", rr.Code)
 	}
-
-	// Verify it's gone from DB
-	if _, ok := mockDB.refreshTokens[string(hash)]; ok {
-		t.Error("Token should have been removed/revoked from mock DB")
+	if !revoked {
+		t.Errorf("Expected service RevokeToken to be called")
 	}
 }
 
 func TestAuthHandler_ValidateToken(t *testing.T) {
 	// Setup
-	mockDB := &MockQuerier{
-		users:         make(map[string]database.User),
-		refreshTokens: make(map[string]database.RefreshToken),
-	}
+	mockDB := &MockQuerier{}
 	mockAuthService := &MockAuthService{}
 	cfg := &config.ApiConfig{
 		JWTSecret:     "secret_for_validation",
@@ -206,14 +200,18 @@ func TestAuthHandler_ValidateToken(t *testing.T) {
 
 	handler := NewAuthHandler(mockDB, mockAuthService, cfg)
 
-	// Create a valid user
-	userID := uuid.New()
-	mockDB.users[userID.String()] = database.User{ID: userID, Username: "valid"}
-
 	// Generate a valid JWT
+	userID := uuid.New()
 	validToken, _ := auth.MakeJWT(userID, cfg.JWTSecret, time.Hour)
 
-	// Case 1: Valid Token
+	// Case 1: Valid Token & User Exists
+	mockAuthService.GetUserFn = func(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
+		if id == userID {
+			return dto.UserResponse{ID: userID}, nil
+		}
+		return dto.UserResponse{}, errors.New("not found")
+	}
+
 	req, _ := http.NewRequest("GET", "/api/validate-token", nil)
 	req.Header.Set("Authorization", "Bearer "+validToken)
 	rr := httptest.NewRecorder()
@@ -235,7 +233,6 @@ func TestAuthHandler_ValidateToken(t *testing.T) {
 	}
 
 	// Case 3: Invalid Token Signature
-	// Generate token with different secret
 	faketoken, _ := auth.MakeJWT(userID, "wrong_secret", time.Hour)
 	req3, _ := http.NewRequest("GET", "/api/validate-token", nil)
 	req3.Header.Set("Authorization", "Bearer "+faketoken)

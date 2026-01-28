@@ -5,12 +5,12 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/Cadimodev/haiji/backend/internal/auth"
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/database"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
@@ -73,33 +73,41 @@ func TestUserHandler_Update(t *testing.T) {
 
 	handler := NewUserHandler(mockDB, mockAuthService, cfg)
 
-	// Prepare User
 	userID := uuid.New()
-	oldPass := "old_password"
-	oldHash, _ := auth.HashPassword(oldPass)
 
-	user := database.User{
-		ID:             userID,
-		Email:          "old@example.com",
-		Username:       "old_user",
-		HashedPassword: oldHash,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-	mockDB.users[userID.String()] = user
+	// Mock middleware context with userID
+	// (Note: The handler extracts userID from context, which is set by middleware.
+	// In test we manually set it.)
 
 	// Case 1: Success
 	newPass := "new_password"
 	reqBody := dto.UpdateUserRequest{
 		Email:       "new@example.com",
-		Username:    "new_user",
-		OldPassword: oldPass,
+		Username:    "newuser",
+		OldPassword: "old_password",
 		NewPassword: newPass,
 	}
 	bodyBytes, _ := json.Marshal(reqBody)
 
+	// Mock Service Success
+	mockAuthService.UpdateUserFn = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+		if id != userID {
+			return dto.UserWithTokenResponse{}, "", errors.New("wrong user id")
+		}
+		if params.Email != "new@example.com" {
+			return dto.UserWithTokenResponse{}, "", errors.New("wrong email")
+		}
+		return dto.UserWithTokenResponse{
+			UserResponse: dto.UserResponse{
+				ID:       userID,
+				Email:    params.Email,
+				Username: params.Username,
+			},
+			Token: "new_access_token",
+		}, "new_refresh_token", nil
+	}
+
 	req, _ := http.NewRequest("PUT", "/api/user", bytes.NewBuffer(bodyBytes))
-	// Mock Middleware Context
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
 	req = req.WithContext(ctx)
 
@@ -111,20 +119,21 @@ func TestUserHandler_Update(t *testing.T) {
 		t.Errorf("Expected 200 OK, got %d. Body: %s", rr.Code, rr.Body.String())
 	}
 
-	// Verify DB Update
-	updatedUser := mockDB.users[userID.String()]
-	if updatedUser.Email != "new@example.com" {
-		t.Errorf("Expected email to be updated")
-	}
-	match, _ := auth.CheckPasswordHash(newPass, updatedUser.HashedPassword)
-	if !match {
-		t.Errorf("Expected password to be updated")
+	// Verify response contains new info
+	var resp dto.UserWithTokenResponse
+	json.NewDecoder(rr.Body).Decode(&resp)
+	if resp.Email != "new@example.com" {
+		t.Errorf("Expected response email to be updated")
 	}
 
-	// Case 2: Wrong Old Password
+	// Case 2: Wrong Old Password (Service returns error)
+	mockAuthService.UpdateUserFn = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+		return dto.UserWithTokenResponse{}, "", errors.New("incorrect username or password")
+	}
+
 	reqBody2 := dto.UpdateUserRequest{
 		Email:       "new@example.com",
-		Username:    "new_user",
+		Username:    "newuser",
 		OldPassword: "wrong_password",
 		NewPassword: newPass,
 	}
@@ -139,6 +148,6 @@ func TestUserHandler_Update(t *testing.T) {
 	handler.Update(rr2, req2)
 
 	if rr2.Code != http.StatusUnauthorized {
-		t.Errorf("Expected 401 Unauthorized for wrong old pass, got %d", rr2.Code)
+		t.Errorf("Expected 401 Unauthorized for wrong old pass, got %d. Body: %s", rr2.Code, rr2.Body.String())
 	}
 }
