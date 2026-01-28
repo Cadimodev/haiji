@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/Cadimodev/haiji/backend/internal/auth"
@@ -53,8 +52,9 @@ func userToResponse(u database.User) dto.UserResponse {
 }
 
 func (s *authService) Register(ctx context.Context, params dto.CreateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
-	email := strings.ToLower(strings.TrimSpace(params.Email))
-	username := strings.TrimSpace(params.Username)
+	params.Sanitize()
+	email := params.Email
+	username := params.Username
 
 	hashedPass, err := auth.HashPassword(params.Password)
 	if err != nil {
@@ -167,8 +167,9 @@ func (s *authService) Login(ctx context.Context, params dto.LoginRequest, userAg
 }
 
 func (s *authService) UpdateUser(ctx context.Context, userID uuid.UUID, params dto.UpdateUserRequest, userAgent string, ip string) (dto.UserWithTokenResponse, string, error) {
-	email := strings.ToLower(strings.TrimSpace(params.Email))
-	username := strings.TrimSpace(params.Username)
+	params.Sanitize()
+	email := params.Email
+	username := params.Username
 
 	user, err := s.db.GetUserByID(ctx, userID)
 	if err != nil {
