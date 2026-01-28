@@ -33,11 +33,13 @@ func TestRoom_Lifecycle(t *testing.T) {
 	// Wait for processing
 	time.Sleep(50 * time.Millisecond)
 
-	if len(room.Clients) != 1 {
-		t.Fatalf("Expected 1 client, got %d", len(room.Clients))
+	vals := room.GetValues()
+	if vals.Clients != 1 {
+		t.Fatalf("Expected 1 client, got %d", vals.Clients)
 	}
-	if _, ok := room.Players[hostID]; !ok {
-		t.Error("Player should be in Players map")
+
+	if len(vals.Players) != 1 {
+		t.Error("Expected 1 player")
 	}
 
 	// 2. Client receives ROOM_STATE
@@ -56,11 +58,12 @@ func TestRoom_Lifecycle(t *testing.T) {
 	room.unregister <- c1
 	time.Sleep(50 * time.Millisecond)
 
-	if len(room.Clients) != 0 {
-		t.Errorf("Expected 0 clients after unregister, got %d", len(room.Clients))
+	vals = room.GetValues()
+	if vals.Clients != 0 {
+		t.Errorf("Expected 0 clients after unregister, got %d", vals.Clients)
 	}
-	if len(room.Players) != 0 {
-		t.Error("Players map should be empty in WAITING state")
+	if len(vals.Players) != 0 {
+		t.Error("Players count should be 0 in WAITING state")
 	}
 
 	// 4. Room Cleanup (Grace period test would be slow, skipping here)
@@ -88,7 +91,11 @@ func TestRoom_StartGame(t *testing.T) {
 	startMsg, _ := json.Marshal(map[string]interface{}{"type": "START_GAME"})
 	room.handleRoomMessage(c2, startMsg)
 
-	if room.State != StateWaiting {
+	// Wait for processing
+	time.Sleep(10 * time.Millisecond)
+
+	vals := room.GetValues()
+	if vals.State != StateWaiting {
 		t.Errorf("Game should not start from non-host request")
 	}
 
@@ -96,8 +103,9 @@ func TestRoom_StartGame(t *testing.T) {
 	room.handleRoomMessage(c1, startMsg)
 	time.Sleep(10 * time.Millisecond)
 
-	if room.State != StatePlaying {
-		t.Errorf("Game should be in PLAYING state, got %v", room.State)
+	vals = room.GetValues()
+	if vals.State != StatePlaying {
+		t.Errorf("Game should be in PLAYING state, got %v", vals.State)
 	}
 
 	// 3. Verify Broadcast
@@ -123,7 +131,7 @@ func TestRoom_ScoreUpdate(t *testing.T) {
 	hostID := uuid.New()
 	// Short duration to test finishGame quickly if needed, but here we just test scoring
 	room := NewRoom("TEST03", hub, 10, []string{"group1"}, hostID)
-	room.State = StatePlaying // Force playing state
+	room.State = StatePlaying // Force playing state manually for setup (unsafe if concurrent, but we haven't started Run yet or just started)
 
 	pID := uuid.New()
 	room.Players[pID] = &Player{UserID: pID, Username: "P1", Score: 0}
@@ -131,7 +139,7 @@ func TestRoom_ScoreUpdate(t *testing.T) {
 	// Create mock client associated with player
 	c1 := newMockClient(hub, pID, "P1")
 	room.Clients[c1] = true
-	c1.Room = room // important for handleRoomMessage if we used it fully, but we call method directly
+	c1.Room = room
 
 	// Run loop to handle broadcast channel
 	go room.Run()
@@ -149,8 +157,13 @@ func TestRoom_ScoreUpdate(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Check State
-	if room.Players[pID].Score != 100 {
-		t.Errorf("Expected score 100, got %d", room.Players[pID].Score)
+	vals := room.GetValues()
+	if p, ok := vals.Players[pID]; ok {
+		if p.Score != 100 {
+			t.Errorf("Expected score 100, got %d", p.Score)
+		}
+	} else {
+		t.Errorf("Player P1 not found in room")
 	}
 
 	// Check Broadcast

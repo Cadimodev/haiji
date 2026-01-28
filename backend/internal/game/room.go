@@ -43,6 +43,14 @@ type Room struct {
 	unregister   chan *Client
 	stopGame     chan bool
 	timeFinished chan bool
+	// getValues replaced by generic action channel
+	action chan func() // Closure pattern for actions
+}
+
+type RoomValues struct {
+	Clients int
+	Players map[uuid.UUID]*Player
+	State   GameState
 }
 
 func NewRoom(code string, hub *Hub, duration int, groups []string, hostID uuid.UUID) *Room {
@@ -59,6 +67,7 @@ func NewRoom(code string, hub *Hub, duration int, groups []string, hostID uuid.U
 		Players:      make(map[uuid.UUID]*Player),
 		stopGame:     make(chan bool),
 		timeFinished: make(chan bool),
+		action:       make(chan func()),
 		HostID:       hostID,
 	}
 }
@@ -141,7 +150,38 @@ func (r *Room) Run() {
 
 		case <-r.stopGame:
 			return
+
+		case action := <-r.action:
+			action()
 		}
+	}
+}
+
+// GetValues allows safe inspection of room state
+func (r *Room) GetValues() RoomValues {
+	// Use the action channel to request state safely from the loop
+	ch := make(chan RoomValues)
+
+	action := func() {
+		// Deep copy players
+		playersCopy := make(map[uuid.UUID]*Player)
+		for k, v := range r.Players {
+			p := *v
+			playersCopy[k] = &p
+		}
+
+		ch <- RoomValues{
+			Clients: len(r.Clients),
+			Players: playersCopy,
+			State:   r.State,
+		}
+	}
+
+	select {
+	case r.action <- action:
+		return <-ch
+	case <-time.After(100 * time.Millisecond):
+		return RoomValues{} // Timeout or closed
 	}
 }
 
@@ -187,22 +227,31 @@ func (r *Room) handleRoomMessage(client *Client, msg []byte) {
 		return
 	}
 
-	switch payload.Type {
-	case "START_GAME":
-		// Only host can start
-		if client.UserID != r.HostID {
-			return
-		}
-		r.startGame()
+	// Send closure to be executed in Run loop
+	action := func() {
+		switch payload.Type {
+		case "START_GAME":
+			// Only host can start
+			if client.UserID != r.HostID {
+				return
+			}
+			r.startGame()
 
-	case "SUBMIT_SCORE":
-		if r.State == StatePlaying {
-			if p, ok := r.Players[client.UserID]; ok {
-				p.Score = payload.Score // Or increment? Trusting client for now.
-				// Broadcast score update?
-				r.broadcastScores()
+		case "SUBMIT_SCORE":
+			if r.State == StatePlaying {
+				if p, ok := r.Players[client.UserID]; ok {
+					p.Score = payload.Score // Or increment? Trusting client for now.
+					// Broadcast score update?
+					r.broadcastScores()
+				}
 			}
 		}
+	}
+
+	select {
+	case r.action <- action:
+	case <-time.After(100 * time.Millisecond):
+		log.Println("Timeout sending action to room loop")
 	}
 }
 
