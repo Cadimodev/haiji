@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { ROUTES } from "../config/constants";
 import { useUser } from "../context/UserContext";
 import { useLogout } from "../hooks/useLogout";
 import '../styles/Navbar.css';
@@ -10,16 +11,16 @@ function Navbar() {
     return (
         <nav>
             <div className="navbar-links-left">
-                <NavLink to="/" end className="btn-flip" data-back="ホーム" data-front="HOME" />
-                <NavLink to="/kana-chart" end className="btn-flip" data-back="グラフ" data-front="CHART" />
-                <NavLink to="/kana-practice" end className="btn-flip" data-back="練習" data-front="PRACTICE" />
-                <NavLink to="/kana-battle" end className="btn-flip" data-back="バトル" data-front="BATTLE" />
+                <NavLink to={ROUTES.HOME} end className="btn-flip" data-back="ホーム" data-front="HOME" />
+                <NavLink to={ROUTES.KANA_CHART} end className="btn-flip" data-back="グラフ" data-front="CHART" />
+                <NavLink to={ROUTES.KANA_PRACTICE} end className="btn-flip" data-back="練習" data-front="PRACTICE" />
+                <NavLink to={ROUTES.KANA_BATTLE} end className="btn-flip" data-back="バトル" data-front="BATTLE" />
             </div>
             <div className="navbar-links-right">
                 {user
                     ? (
                         <>
-                            <NavLink to="/user-profile" end className="btn-flip" data-back={user.username} data-front={user.username} />
+                            <NavLink to={ROUTES.USER_PROFILE} end className="btn-flip" data-back={user.username} data-front={user.username} />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="28"
@@ -40,7 +41,7 @@ function Navbar() {
                             </svg>
                         </>
                     )
-                    : <NavLink to="/login" end className="btn-flip" data-back="ログイン" data-front="LOGIN" />
+                    : <NavLink to={ROUTES.LOGIN} end className="btn-flip" data-back="ログイン" data-front="LOGIN" />
                 }
             </div>
         </nav>

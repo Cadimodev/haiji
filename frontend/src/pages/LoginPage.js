@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { ROUTES } from "../config/constants";
 import { useUser } from "../context/UserContext";
 import { useAuthForm } from "../hooks/useAuthForm";
 import { validateLogin } from "../utils/validation";
@@ -14,7 +15,7 @@ function LoginPage() {
 
     useEffect(() => {
         if (!loadingUser && user) {
-            navigate("/", { replace: true });
+            navigate(ROUTES.HOME, { replace: true });
         }
     }, [user, loadingUser, navigate]);
 
@@ -51,7 +52,7 @@ function LoginPage() {
         }
 
         login(data.id, data.username, data.token ?? "");
-        navigate("/", { replace: true });
+        navigate(ROUTES.HOME, { replace: true });
         setIsSubmitting(false);
     };
 
@@ -100,13 +101,13 @@ function LoginPage() {
                     {backendError && <div className="backend-error-msg">{backendError}</div>}
                 </form>
 
-                <NavLink to="/forgot-password" className="haiji-link">
+                <NavLink to={ROUTES.FORGOT_PASSWORD} className="haiji-link">
                     Forgot password?
                 </NavLink>
 
                 <div className="register-section">
                     <span>Don't have an account?</span>
-                    <NavLink to="/register" end className="haiji-link">
+                    <NavLink to={ROUTES.REGISTER} end className="haiji-link">
                         Sign up
                     </NavLink>
                 </div>

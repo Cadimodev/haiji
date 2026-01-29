@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from "react";
+import { STORAGE_KEYS } from "../config/constants";
 import { httpRequest, registerAuthInterceptor, setAccessToken } from "../utils/http"; // Import registerAuthInterceptor
 import { refreshTokenRequest, revokeTokenRequest } from "../services/authService";
 
@@ -15,7 +16,7 @@ export function UserProvider({ children }) {
             console.error("Error logging out of server:", error);
         } finally {
             setUser(null);
-            localStorage.removeItem("user");
+            localStorage.removeItem(STORAGE_KEYS.USER);
         }
     }, []);
 
@@ -26,7 +27,7 @@ export function UserProvider({ children }) {
             const { ok, data } = await refreshTokenRequest();
 
             if (ok && data?.token) {
-                const currentStored = JSON.parse(localStorage.getItem("user") || "{}");
+                const currentStored = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || "{}");
                 const userId = data.id || currentStored.id;
                 const username = data.username || currentStored.username || "User";
 
@@ -37,7 +38,7 @@ export function UserProvider({ children }) {
                 };
 
                 setUser(updatedUser);
-                localStorage.setItem("user", JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
+                localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
                 console.log("Silent refresh successful");
                 return data.token;
             } else {
@@ -59,14 +60,14 @@ export function UserProvider({ children }) {
 
     useEffect(() => {
         const initializeUser = async () => {
-            const storedUser = localStorage.getItem("user");
+            const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
             let parsedUser = null;
 
             if (storedUser) {
                 try {
                     parsedUser = JSON.parse(storedUser);
                 } catch {
-                    localStorage.removeItem("user");
+                    localStorage.removeItem(STORAGE_KEYS.USER);
                 }
             }
 
@@ -83,9 +84,9 @@ export function UserProvider({ children }) {
                 };
                 setUser(updatedUser);
 
-                localStorage.setItem("user", JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
+                localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({ id: updatedUser.id, username: updatedUser.username }));
             } else {
-                localStorage.removeItem("user");
+                localStorage.removeItem(STORAGE_KEYS.USER);
                 setUser(null);
             }
             setLoadingUser(false);
@@ -97,7 +98,7 @@ export function UserProvider({ children }) {
     const login = useCallback((id, username, token) => {
         const newUser = { id, username, token };
         setUser(newUser);
-        localStorage.setItem("user", JSON.stringify({ id, username }));
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({ id, username }));
     }, []);
 
     const value = useMemo(
