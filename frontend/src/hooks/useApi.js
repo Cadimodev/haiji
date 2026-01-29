@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useUser } from "../context/UserContext";
 import { httpRequest } from "../utils/http";
+import { ENDPOINTS } from "../config/api";
 
 export function useApi() {
     const { user } = useUser();
@@ -30,11 +31,11 @@ export function useApi() {
     // --- Services ---
 
     const getUserProfile = useCallback(() => {
-        return authenticatedRequest("/api/user-profile", { method: "GET" });
+        return authenticatedRequest(ENDPOINTS.USER_PROFILE, { method: "GET" });
     }, [authenticatedRequest]);
 
     const updateUserProfile = useCallback((payload) => {
-        return authenticatedRequest("/api/users", {
+        return authenticatedRequest(ENDPOINTS.UPDATE_USER, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -42,7 +43,7 @@ export function useApi() {
     }, [authenticatedRequest]);
 
     const createBattleRoom = useCallback((duration, groups) => {
-        return authenticatedRequest("/api/kana-battle", {
+        return authenticatedRequest(ENDPOINTS.KANA_BATTLE, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ duration, groups }),

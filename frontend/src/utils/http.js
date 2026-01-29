@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL, ENDPOINTS } from "../config/api";
 
 let refreshInterceptor = null;
 let accessToken = null;
@@ -62,7 +62,7 @@ export async function httpRequest(url, options = {}) {
     if (
         response.status === 401 &&
         refreshInterceptor &&
-        !url.includes("/api/refresh-token") &&
+        !url.includes(ENDPOINTS.REFRESH_TOKEN) &&
         !options._retry // Custom flag to prevent infinite loops
     ) {
         try {

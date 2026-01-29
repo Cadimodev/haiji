@@ -1,7 +1,8 @@
-import { httpRequest } from "../utils/http"; // para login/register/refresh
+import { httpRequest } from "../utils/http";
+import { ENDPOINTS } from "../config/api";
 
 export function loginRequest({ username, password }) {
-    return httpRequest("/api/login", {
+    return httpRequest(ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -9,7 +10,7 @@ export function loginRequest({ username, password }) {
 }
 
 export function registerRequest({ email, username, password }) {
-    return httpRequest("/api/users", {
+    return httpRequest(ENDPOINTS.REGISTER, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, password }),
@@ -17,13 +18,13 @@ export function registerRequest({ email, username, password }) {
 }
 
 export function refreshTokenRequest() {
-    return httpRequest("/api/refresh-token", {
+    return httpRequest(ENDPOINTS.REFRESH_TOKEN, {
         method: "POST",
     });
 }
 
 export function revokeTokenRequest() {
-    return httpRequest("/api/revoke-token", {
+    return httpRequest(ENDPOINTS.REVOKE_TOKEN, {
         method: "POST",
     });
 }
