@@ -46,7 +46,7 @@ function KanaBattlePage() {
 
         // Connect
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//${window.location.host}/ws?token=${user.token}`;
+        const wsUrl = `${protocol}//${window.location.host}/api/ws?token=${user.token}`;
 
         const ws = new WebSocket(wsUrl);
         socketRef.current = ws;

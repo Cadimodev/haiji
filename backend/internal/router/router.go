@@ -54,7 +54,7 @@ func New(
 
 	// Game Endpoints
 	mux.Handle("POST /api/kana-battle", authMiddleware(http.HandlerFunc(gameHandler.CreateRoom)))
-	mux.HandleFunc("/ws", gameHandler.HandleWS)
+	mux.HandleFunc("/api/ws", gameHandler.HandleWS)
 
 	// DEV endpoints
 	if apiCFG.Platform == "dev" {
