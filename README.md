@@ -112,6 +112,6 @@ haiji/
 *   **Input Validation**: Strict struct validation on all incoming requests.
 
 ## Screenshots
-| Landing Page | Battle Mode |
-|:---:|:---:|
-| ![Landing](frontend/src/assets/haiji-fuji.png) | ![Battle](frontend/src/assets/hiragana_katakana.png) |
+| Landing Page |
+|:---:|
+| ![Landing](frontend/src/assets/haiji-fuji.png) |
