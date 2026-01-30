@@ -90,7 +90,7 @@ func TestUserHandler_Update(t *testing.T) {
 	bodyBytes, _ := json.Marshal(reqBody)
 
 	// Mock Service Success
-	mockAuthService.UpdateUserFn = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+	mockAuthService.UpdateUserFunc = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
 		if id != userID {
 			return dto.UserWithTokenResponse{}, "", errors.New("wrong user id")
 		}
@@ -127,7 +127,7 @@ func TestUserHandler_Update(t *testing.T) {
 	}
 
 	// Case 2: Wrong Old Password (Service returns error)
-	mockAuthService.UpdateUserFn = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+	mockAuthService.UpdateUserFunc = func(ctx context.Context, id uuid.UUID, params dto.UpdateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
 		return dto.UserWithTokenResponse{}, "", errors.New("incorrect username or password")
 	}
 
