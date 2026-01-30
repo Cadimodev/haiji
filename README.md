@@ -103,7 +103,7 @@ haiji/
 └── go.mod              # Go dependencies
 ```
 
-## 🔐 Security Features
+## Security Features
 
 *   **HttpOnly Cookies**: Refresh tokens are stored securely to prevent XSS attacks.
 *   **Rate Limiting**: Login and Refresh endpoints are rate-limited to prevent brute force.
