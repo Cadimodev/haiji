@@ -1,4 +1,4 @@
-# H a i j i (ไฮจิ) 🀄
+# H a i j i (灰二) 🀄
 
 **Haiji** is a modern web application designed for learning and mastering Japanese Kana (Hiragana & Katakana). It features a competitive "Battle Mode" where users can race against each other to identify characters, powered by real-time WebSockets.
 
