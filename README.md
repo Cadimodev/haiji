@@ -114,6 +114,13 @@ haiji/
 *   **Input Validation**: Strict struct validation on all incoming requests.
 
 ## Screenshots
-| Landing Page |
-|:---:|
-| ![Landing](frontend/src/assets/haiji-fuji.png) |
+| | |
+|:---:|:---:|
+| **Landing Page** | **Kana Chart** |
+| <img src="frontend/src/assets/Screenshots/Landing.png" width="400"> | <img src="frontend/src/assets/Screenshots/ChartPage.png" width="400"> |
+| *Home page and mode selection* | *Complete Hiragana & Katakana reference* |
+| **Practice Mode** | **Battle Landing** |
+| <img src="frontend/src/assets/Screenshots/PracticePage.png" width="400"> | <img src="frontend/src/assets/Screenshots/KanaBattleLandingPage.png" width="400"> |
+| *Solo practice session* | *Create or join multiplayer rooms* |
+| **Battle Room** | **Kana Battle** |
+| <img src="frontend/src/assets/Screenshots/KanaBattleRoom.png" width="400"> | <img src="frontend/src/assets/Screenshots/KanaBattle.png" width="400"> |
