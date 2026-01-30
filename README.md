@@ -71,7 +71,7 @@ The easiest way to run the project is using Docker Compose.
 2.  Copy `.env.example` to `.env` and configure your DB credentials.
 3.  Run the server:
     ```bash
-    go run backend/cmd/main.go
+    go run ./backend/cmd/main.go
     ```
 
 #### Frontend
