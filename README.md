@@ -1,17 +1,17 @@
-# H a i j i (灰二) 🀄
+# H a i j i (灰二)
 
 **Haiji** is a modern web application designed for learning and mastering Japanese Kana (Hiragana & Katakana). It features a competitive "Battle Mode" where users can race against each other to identify characters, powered by real-time WebSockets.
 
 The project is built with a clear separation of concerns, featuring a robust Go backend and a responsive React frontend, orchestrated via Docker.
 
-## 🚀 Key Features
+## Key Features
 
 *   **Learn Kana**: Interactive tables and flashcards for Hiragana and Katakana.
 *   **Kana Battle**: Real-time multiplayer competition using WebSockets.
 *   **User Profiles**: Manage account details and security settings.
 *   **Secure Authentication**: robust JWT integration with HttpOnly cookies and refresh token rotation.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Backend
 *   **Language**: Go 1.25
@@ -33,7 +33,7 @@ The project is built with a clear separation of concerns, featuring a robust Go 
 *   **Containerization**: Docker & Docker Compose
 *   **Reverse Proxy**: Nginx (serving frontend and proxying API)
 
-## 📦 Prerequisites
+## Prerequisites
 
 *   [Docker](https://www.docker.com/) and Docker Compose
 *   *Optional (for local dev without Docker)*:
@@ -41,7 +41,7 @@ The project is built with a clear separation of concerns, featuring a robust Go 
     *   Node.js 18+ (Frontend)
     *   PostgreSQL 15 (Database)
 
-## 🏃‍♂️ Getting Started
+## Getting Started
 
 The easiest way to run the project is using Docker Compose.
 
@@ -85,7 +85,7 @@ The easiest way to run the project is using Docker Compose.
     npm start
     ```
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 haiji/
