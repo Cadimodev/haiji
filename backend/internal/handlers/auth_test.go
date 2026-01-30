@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/Cadimodev/haiji/backend/internal/config"
 	"github.com/Cadimodev/haiji/backend/internal/dto"
@@ -127,6 +128,99 @@ func TestAuthHandler_Login(t *testing.T) {
 		resp := w.Result()
 		if resp.StatusCode != http.StatusUnauthorized {
 			t.Errorf("Expected status 401 for unauthorized, got %d", resp.StatusCode)
+		}
+	})
+}
+
+func TestAuthHandler_RefreshToken(t *testing.T) {
+	// Setup
+	mockService := &MockAuthService{}
+	cfg := &config.ApiConfig{Platform: "dev"}
+	handler := NewAuthHandler(nil, mockService, cfg)
+
+	t.Run("Success", func(t *testing.T) {
+		expectedUser := dto.UserWithTokenResponse{
+			UserResponse: dto.UserResponse{Username: "testuser"},
+			Token:        "new_access_token",
+		}
+		mockService.RefreshTokenFunc = func(ctx context.Context, hex string) (dto.UserWithTokenResponse, string, error) {
+			if hex != "valid_refresh_hex" {
+				return dto.UserWithTokenResponse{}, "", errors.New("invalid token")
+			}
+			return expectedUser, "", nil // empty string = no rotation
+		}
+
+		req, _ := http.NewRequest("POST", "/api/refresh-token", nil)
+		req.AddCookie(&http.Cookie{Name: "refresh_token", Value: "valid_refresh_hex"})
+		w := httptest.NewRecorder()
+
+		handler.RefreshToken(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d", w.Code)
+		}
+		var resp dto.UserWithTokenResponse
+		json.NewDecoder(w.Body).Decode(&resp)
+		if resp.Token != "new_access_token" {
+			t.Errorf("Expected token new_access_token, got %s", resp.Token)
+		}
+	})
+
+	t.Run("No Cookie", func(t *testing.T) {
+		req, _ := http.NewRequest("POST", "/api/refresh-token", nil)
+		w := httptest.NewRecorder()
+
+		handler.RefreshToken(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected 401, got %d", w.Code)
+		}
+	})
+}
+
+func TestAuthHandler_RevokeToken(t *testing.T) {
+	mockService := &MockAuthService{}
+	cfg := &config.ApiConfig{Platform: "dev"}
+	handler := NewAuthHandler(nil, mockService, cfg)
+
+	t.Run("Success", func(t *testing.T) {
+		mockService.RevokeTokenFunc = func(ctx context.Context, hex string) error {
+			if hex != "valid_refresh_hex" {
+				return errors.New("invalid token")
+			}
+			return nil
+		}
+
+		req, _ := http.NewRequest("POST", "/api/revoke-token", nil)
+		req.AddCookie(&http.Cookie{Name: "refresh_token", Value: "valid_refresh_hex"})
+		w := httptest.NewRecorder()
+
+		handler.RevokeToken(w, req)
+
+		if w.Code != http.StatusNoContent {
+			t.Errorf("Expected 204, got %d", w.Code)
+		}
+		// Verify cookie cleared
+		cleared := false
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "refresh_token" && c.Expires.Before(time.Now()) {
+				cleared = true
+			}
+		}
+		if !cleared {
+			t.Error("Expected refresh_token cookie to be cleared")
+		}
+	})
+
+	t.Run("No Cookie (Idempotent)", func(t *testing.T) {
+		req, _ := http.NewRequest("POST", "/api/revoke-token", nil)
+		w := httptest.NewRecorder()
+
+		handler.RevokeToken(w, req)
+
+		// Handler logic: if no cookie, just return 204
+		if w.Code != http.StatusNoContent {
+			t.Errorf("Expected 204, got %d", w.Code)
 		}
 	})
 }

@@ -151,3 +151,167 @@ func TestUserHandler_Update(t *testing.T) {
 		t.Errorf("Expected 401 Unauthorized for wrong old pass, got %d. Body: %s", rr2.Code, rr2.Body.String())
 	}
 }
+
+func TestUserHandler_Create(t *testing.T) {
+	// Setup
+	mockDB := &MockQuerier{}
+	mockAuthService := &MockAuthService{}
+	cfg := &config.ApiConfig{
+		Platform: "dev",
+	}
+
+	handler := NewUserHandler(mockDB, mockAuthService, cfg)
+
+	t.Run("Success", func(t *testing.T) {
+		// Mock Data
+		expectedUser := dto.UserWithTokenResponse{
+			UserResponse: dto.UserResponse{
+				ID:       uuid.New(),
+				Username: "newuser",
+				Email:    "new@example.com",
+			},
+			Token: "access_token",
+		}
+		expectedRefresh := "refresh_token"
+
+		// Mock Service
+		mockAuthService.RegisterFunc = func(ctx context.Context, params dto.CreateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+			if params.Username != "newuser" || params.Email != "new@example.com" {
+				return dto.UserWithTokenResponse{}, "", errors.New("unexpected params")
+			}
+			return expectedUser, expectedRefresh, nil
+		}
+
+		// Request
+		reqBody := dto.CreateUserRequest{
+			Username: "newuser",
+			Email:    "new@example.com",
+			Password: "secure_password",
+		}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(bodyBytes))
+		w := httptest.NewRecorder()
+
+		// Execute
+		handler.Create(w, req)
+
+		// Assertions
+		resp := w.Result()
+		if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status 200 or 201, got %d", resp.StatusCode)
+		}
+
+		// Check JSON
+		var respBody dto.UserWithTokenResponse
+		json.NewDecoder(resp.Body).Decode(&respBody)
+		if respBody.Token != expectedUser.Token {
+			t.Errorf("Expected token %s, got %s", expectedUser.Token, respBody.Token)
+		}
+
+		// Check Cookie
+		foundRefresh := false
+		for _, c := range resp.Cookies() {
+			if c.Name == "refresh_token" {
+				foundRefresh = true
+				if c.Value != expectedRefresh {
+					t.Errorf("Expected refresh cookie %s, got %s", expectedRefresh, c.Value)
+				}
+			}
+		}
+		if !foundRefresh {
+			t.Error("Expected refresh_token cookie to be set")
+		}
+	})
+
+	t.Run("Invalid Input", func(t *testing.T) {
+		// Missing password
+		reqBody := dto.CreateUserRequest{
+			Username: "newuser",
+			Email:    "new@example.com",
+		}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(bodyBytes))
+		w := httptest.NewRecorder()
+
+		handler.Create(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("Service Error (Duplicate)", func(t *testing.T) {
+		// Mock Service
+		mockAuthService.RegisterFunc = func(ctx context.Context, params dto.CreateUserRequest, ua string, ip string) (dto.UserWithTokenResponse, string, error) {
+			return dto.UserWithTokenResponse{}, "", errors.New("duplicate user")
+		}
+
+		reqBody := dto.CreateUserRequest{
+			Username: "dupuser",
+			Email:    "dup@example.com",
+			Password: "password",
+		}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(bodyBytes))
+		w := httptest.NewRecorder()
+
+		handler.Create(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusBadRequest && resp.StatusCode != http.StatusInternalServerError {
+			t.Errorf("Expected status 400 or 500, got %d", resp.StatusCode)
+		}
+	})
+}
+
+func TestUserHandler_GetProfile(t *testing.T) {
+	mockDB := &MockQuerier{}
+	mockService := &MockAuthService{}
+	cfg := &config.ApiConfig{Platform: "dev"}
+	handler := NewUserHandler(mockDB, mockService, cfg)
+
+	t.Run("Success", func(t *testing.T) {
+		uid := uuid.New()
+		expectedUser := dto.UserResponse{
+			ID:       uid,
+			Username: "profile_user",
+			Email:    "profile@example.com",
+		}
+
+		mockService.GetUserFunc = func(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
+			if id != uid {
+				return dto.UserResponse{}, errors.New("wrong id")
+			}
+			return expectedUser, nil
+		}
+
+		req, _ := http.NewRequest("GET", "/api/user-profile", nil)
+		ctx := context.WithValue(req.Context(), middleware.UserIDKey, uid)
+		req = req.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		handler.GetProfile(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d", w.Code)
+		}
+		var resp dto.UserResponse
+		json.NewDecoder(w.Body).Decode(&resp)
+		if resp.Username != "profile_user" {
+			t.Errorf("Expected username profile_user, got %s", resp.Username)
+		}
+	})
+
+	t.Run("Unauthorized (No Context)", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/user-profile", nil)
+		// No Context
+		w := httptest.NewRecorder()
+
+		handler.GetProfile(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected 401, got %d", w.Code)
+		}
+	})
+}
