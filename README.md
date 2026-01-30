@@ -124,3 +124,4 @@ haiji/
 | *Solo practice session* | *Create or join multiplayer rooms* |
 | **Battle Room** | **Kana Battle** |
 | <img src="frontend/src/assets/Screenshots/KanaBattleRoom.png" width="400"> | <img src="frontend/src/assets/Screenshots/KanaBattle.png" width="400"> |
+| *Lobby waiting for players* | *Real-time competitive match* |
