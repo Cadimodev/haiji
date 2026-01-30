@@ -110,3 +110,8 @@ haiji/
 *   **HttpOnly Cookies**: Refresh tokens are stored securely to prevent XSS attacks.
 *   **Rate Limiting**: Login and Refresh endpoints are rate-limited to prevent brute force.
 *   **Input Validation**: Strict struct validation on all incoming requests.
+
+## Screenshots
+| Landing Page |
+|:---:|
+| ![Landing](frontend/src/assets/haiji-fuji.png) |
