@@ -1,6 +1,6 @@
 # H a i j i (灰二)
 
-![Haiji Logo](frontend/src/assets/HaijiLogo.jpeg)
+<img src="frontend/src/assets/HaijiLogo.jpeg" width="300" alt="Haiji Logo">
 
 **Haiji** is a modern web application designed for learning and mastering Japanese Kana (Hiragana & Katakana). It features a competitive "Battle Mode" where users can race against each other to identify characters, powered by real-time WebSockets.
 
