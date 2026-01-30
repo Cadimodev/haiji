@@ -106,7 +106,7 @@ function KanaBattleLandingPage() {
                         Real-time Hiragana challenge with your friends.
                     </p>
                     <p className="kana-battle-tagline">
-                        Create a room, share the code, and see who masters the kana in 60 seconds.
+                        Create a room, share the code, and see who masters the kana within the time limit.
                     </p>
                 </div>
             </section>
