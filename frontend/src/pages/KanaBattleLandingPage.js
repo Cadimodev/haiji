@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
+import { useUser } from "../context/UserContext";
 import "../styles/KanaBattleLandingPage.css";
 import {
     GROUP_IDS,
@@ -16,6 +17,7 @@ const ALL_GROUPS = [...GROUP_IDS];
 function KanaBattleLandingPage() {
     const { createBattleRoom } = useApi();
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const [joinCode, setJoinCode] = useState("");
     const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
@@ -69,6 +71,11 @@ function KanaBattleLandingPage() {
 
         if (activeGroupIds.length === 0) {
             alert("Please select at least one kana group.");
+            return;
+        }
+
+        if (!user) {
+            navigate("/login");
             return;
         }
 
