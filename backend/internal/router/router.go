@@ -42,6 +42,12 @@ func New(
 		http.ServeFile(w, r, filepath.Join(apiCFG.FilepathRoot, "index.html"))
 	})
 
+	// Public Handlers
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
 	// API endpoints
 	mux.HandleFunc("POST /api/users", userHandler.Create)
 	mux.Handle("PUT /api/users", authMiddleware(http.HandlerFunc(userHandler.Update)))

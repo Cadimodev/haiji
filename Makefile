@@ -38,6 +38,15 @@ vet:
 	@echo "Running static analysis (go vet)..."
 	$(GO_CMD) vet ./backend/...
 
+lint:
+	@echo "Running linter..."
+	@if command -v golangci-lint >/dev/null; then \
+		golangci-lint run ./backend/...; \
+	else \
+		echo "golangci-lint not installed. Running go vet instead..."; \
+		$(GO_CMD) vet ./backend/...; \
+	fi
+
 fmt:
 	@echo "Formatting code..."
 	$(GO_CMD) fmt ./backend/...
