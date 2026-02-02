@@ -21,8 +21,11 @@ func New(
 ) http.Handler {
 
 	// Rate limiters
+	// Rate limiters
 	loginLimiter := middleware.NewRateLimiter(5, time.Minute)
+	registerLimiter := middleware.NewRateLimiter(5, time.Minute)
 	refreshLimiter := middleware.NewRateLimiter(60, time.Minute)
+	roomLimiter := middleware.NewRateLimiter(10, time.Minute)
 	authMiddleware := middleware.AuthMiddleware(apiCFG)
 
 	mux := http.NewServeMux()
@@ -49,7 +52,7 @@ func New(
 	})
 
 	// API endpoints
-	mux.HandleFunc("POST /api/users", userHandler.Create)
+	mux.Handle("POST /api/users", registerLimiter.Middleware(http.HandlerFunc(userHandler.Create)))
 	mux.Handle("PUT /api/users", authMiddleware(http.HandlerFunc(userHandler.Update)))
 	mux.Handle("GET /api/user-profile", authMiddleware(http.HandlerFunc(userHandler.GetProfile)))
 
@@ -59,7 +62,7 @@ func New(
 	mux.HandleFunc("GET /api/validate-token", authHandler.ValidateToken)
 
 	// Game Endpoints
-	mux.Handle("POST /api/kana-battle", authMiddleware(http.HandlerFunc(gameHandler.CreateRoom)))
+	mux.Handle("POST /api/kana-battle", authMiddleware(roomLimiter.Middleware(http.HandlerFunc(gameHandler.CreateRoom))))
 	mux.HandleFunc("/api/ws", gameHandler.HandleWS)
 
 	// DEV endpoints
