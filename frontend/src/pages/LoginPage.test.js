@@ -27,7 +27,7 @@ describe("LoginPage", () => {
 
     const renderWithContext = () => {
         render(
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <UserProvider>
                     <LoginPage />
                 </UserProvider>

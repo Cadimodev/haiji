@@ -17,7 +17,7 @@ import "./styles/Common.css";
 function App() {
   return (
     <UserProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
