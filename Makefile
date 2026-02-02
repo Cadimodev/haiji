@@ -4,6 +4,9 @@
 GO_CMD=go
 BINARY_NAME=haiji-server
 
+# Dynamic variables
+DB_URL ?= $(shell grep DB_URL .env | cut -d '=' -f2)
+
 all: test build
 
 # Development
@@ -50,6 +53,30 @@ lint:
 fmt:
 	@echo "Formatting code..."
 	$(GO_CMD) fmt ./backend/...
+fmt:
+	@echo "Formatting code..."
+	$(GO_CMD) fmt ./backend/...
+
+# Database Migrations
+db-status:
+	@echo "Checking migration status..."
+	@if [ -z "$(DB_URL)" ]; then echo "Error: DB_URL not set in .env"; exit 1; fi
+	cd backend/sql/schema && goose postgres "$(DB_URL)" status
+
+db-up:
+	@echo "Running migrations up..."
+	@if [ -z "$(DB_URL)" ]; then echo "Error: DB_URL not set in .env"; exit 1; fi
+	cd backend/sql/schema && goose postgres "$(DB_URL)" up
+
+db-down:
+	@echo "Rolling back migration..."
+	@if [ -z "$(DB_URL)" ]; then echo "Error: DB_URL not set in .env"; exit 1; fi
+	cd backend/sql/schema && goose postgres "$(DB_URL)" down
+
+db-create:
+	@echo "Creating new migration..."
+	@read -p "Enter migration name: " name; \
+	cd backend/sql/schema && goose create $$name sql
 
 # Docker Composition
 docker-up:

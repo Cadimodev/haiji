@@ -1,0 +1,8 @@
+FROM gomicro/goose
+
+# Add migration files
+COPY backend/sql/schema /migrations
+
+# Default command to run migrations
+ENTRYPOINT ["/bin/goose"]
+CMD ["-dir", "/migrations", "postgres", "postgres://postgres:postgres@db:5432/haiji?sslmode=disable", "up"]
