@@ -24,6 +24,8 @@ The project is built with a clear separation of concerns, featuring a robust Go 
 *   **Data Access**: `sqlc` for type-safe SQL queries
 *   **Real-time**: `gorilla/websocket`
 *   **Validation**: `go-playground/validator`
+*   **Logging**: `log/slog` (Structured Logging)
+*   **Migrations**: `pressly/goose`
 *   **Security**: Argon2id hashing, JWT, HttpOnly Cookies
 
 ### Frontend
@@ -36,6 +38,7 @@ The project is built with a clear separation of concerns, featuring a robust Go 
 ### Infrastructure
 *   **Containerization**: Docker & Docker Compose
 *   **Reverse Proxy**: Nginx (serving frontend and proxying API)
+*   **Tooling**: `Makefile` for build automation
 
 ## Prerequisites
 
@@ -73,10 +76,13 @@ The easiest way to run the project is using Docker Compose.
      ```
  
  #### 2. Frontend
- 1.  Navigate to `frontend/`.
- 2.  Install & Start:
+ 1.  Install dependencies:
      ```bash
-     npm install && npm start
+     make install-frontend
+     ```
+ 2.  Start the development server:
+     ```bash
+     make run-frontend
      ```
  
  ## Database Migrations
@@ -91,25 +97,37 @@ The easiest way to run the project is using Docker Compose.
 
 ```
 haiji/
-├── backend/            # Go Backend
-│   ├── cmd/            # Entrypoint (main.go)
-│   ├── internal/       # Private code (Handlers, Database, Logic)
-│   │   ├── database/   # Generated sqlc code & models
-│   │   ├── handlers/   # HTTP Handlers
-│   │   └── router/     # Route definitions
-│   └── sql/            # SQL queries and schemas
-├── frontend/           # React Frontend
-│   ├── public/         # Static assets
-│   └── src/            # Components, Hooks, Context, Pages
-├── docker-compose.yml  # Container orchestration
-└── go.mod              # Go dependencies
+├── backend/                # Go Backend
+│   ├── cmd/                # Entrypoint (main.go)
+│   ├── internal/           # Private code (Hexagonal-ish structure)
+│   │   ├── auth/           # Authentication utilities
+│   │   ├── config/         # Environment configuration
+│   │   ├── database/       # Generated sqlc code & models
+│   │   ├── dto/            # Data Transfer Objects
+│   │   ├── game/           # Core Game Logic (WebSocket Hub, Rooms)
+│   │   ├── handlers/       # HTTP Handlers (Controllers)
+│   │   ├── middleware/     # HTTP Middleware (Auth, CORS, Logging)
+│   │   ├── router/         # Router wiring
+│   │   └── service/        # Business Logic Services
+│   └── sql/                # SQL queries and schemas
+├── frontend/               # React Frontend
+│   ├── public/             # Static assets
+│   └── src/                # Components, Hooks, Context, Pages
+├── docker-compose.yml      # Container orchestration
+├── Dockerfile.backend      # Production backend build
+├── Dockerfile.migrator     # Database migration service
+├── Makefile                # Task runner (build, test, migrate)
+└── go.mod                  # Go dependencies
 ```
 
 ## Security Features
 
 *   **HttpOnly Cookies**: Refresh tokens are stored securely to prevent XSS attacks.
-*   **Rate Limiting**: Login and Refresh endpoints are rate-limited to prevent brute force.
-*   **Input Validation**: Strict struct validation on all incoming requests.
+*   **Rate Limiting**: Login, Refresh, and Room Creation endpoints are rate-limited to prevent brute force and abuse.
+*   **Input Validation**: Strict struct validation on all incoming requests using `go-playground/validator`.
+*   **Server Hardening**: Configured `http.Server` timeouts to mitigate Slowloris resource exhaustion attacks.
+*   **Structured Logging**: JSON logging in production for better observability and security auditing.
+*   **Password Hashing**: Industry-standard Argon2id hashing for user passwords.
 
 ## Screenshots
 | | |
