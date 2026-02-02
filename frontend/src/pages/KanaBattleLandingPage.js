@@ -8,7 +8,7 @@ import {
     GROUP_LABELS,
     getGroupsBy
 } from "../utils/kanaData";
-import { API_BASE_URL, ENDPOINTS } from "../config/api";
+
 
 const BEGINNER_GROUPS = ["hsingle", "hk", "hs", "ht", "ksingle", "kk", "ks", "kt"];
 const STANDARD_GROUPS = ["hsingle", "hk", "hs", "ht", "hn", "hh", "hm", "hy", "hr", "ksingle", "kk", "ks", "kt", "kn", "kh", "km", "ky", "kr"];

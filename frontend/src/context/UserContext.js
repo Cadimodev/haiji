@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from "react";
 import { STORAGE_KEYS } from "../config/constants";
-import { httpRequest, registerAuthInterceptor, setAccessToken } from "../utils/http"; // Import registerAuthInterceptor
+import { registerAuthInterceptor, setAccessToken } from "../utils/http"; // Import registerAuthInterceptor
 import { refreshTokenRequest, revokeTokenRequest } from "../services/authService";
 
 const UserContext = createContext();

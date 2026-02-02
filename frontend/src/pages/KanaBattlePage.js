@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { kanaCharGroups } from "../utils/kanaData";
@@ -15,7 +15,7 @@ function KanaBattlePage() {
     // Game State
     const [gameState, setGameState] = useState("CONNECTING"); // CONNECTING, LOBBY, PLAYING, FINISHED
     const [players, setPlayers] = useState({});
-    const [config, setConfig] = useState(null);
+    const [, setConfig] = useState(null);
     const [hostId, setHostId] = useState(null);
     const [endTime, setEndTime] = useState(null);
     const [timeLeft, setTimeLeft] = useState(0);
@@ -29,7 +29,7 @@ function KanaBattlePage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userInput, setUserInput] = useState("");
     const [score, setScore] = useState(0);
-    const [showRomanji, setShowRomanji] = useState(false); // Hover state
+    const [, setShowRomanji] = useState(false); // Hover state
     const [showCopied, setShowCopied] = useState(false); // Copy interaction state
 
     const inputRef = useRef(null);
