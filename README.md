@@ -49,44 +49,43 @@ The project is built with a clear separation of concerns, featuring a robust Go 
 
 The easiest way to run the project is using Docker Compose.
 
-52: ### Option 1: Docker (Recommended)
-53: 
-54: The easiest way. Just run:
-55: ```bash
-56: make docker-up
-57: ```
-58: This will start the database service, migrate the schema automatically, and launch both backend and frontend.
-59: 
-60: ### Option 2: Manual Setup (Local Development)
-61: 
-62: #### 1. Backend & Database
-63: 1.  Ensure you have `go` and `goose` installed.
-64: 2.  Configure your `.env` (copy from `.env.example`).
-65: 3.  Start the database (e.g. `docker-compose up db -d`).
-66: 4.  Run migrations:
-67:     ```bash
-68:     make db-up
-69:     ```
-70: 5.  Run the server:
-71:     ```bash
-72:     make run
-73:     ```
-74: 
-75: #### 2. Frontend
-76: 1.  Navigate to `frontend/`.
-77: 2.  Install & Start:
-78:     ```bash
-79:     npm install && npm start
-80:     ```
-81: 
-82: ## Database Migrations
-83: 
-84: We use `goose` for schema management. Check the `Makefile` for useful commands:
-85: *   `make db-status`: Check migration status.
-86: *   `make db-up`: Apply pending migrations.
-87: *   `make db-down`: Rollback the last migration.
-88: *   `make db-create`: Create a new SQL migration file.
-89:
+ ### Option 1: Docker (Recommended)
+ 
+ The easiest way. Just run:
+ ```bash
+ make docker-up
+ ```
+ This will start the database service, migrate the schema automatically, and launch both backend and ntend.
+ 
+ ### Option 2: Manual Setup (Local Development)
+ 
+ #### 1. Backend & Database
+ 1.  Ensure you have `go` and `goose` installed.
+ 2.  Configure your `.env` (copy from `.env.example`).
+ 3.  Start the database (e.g. `docker-compose up db -d`).
+ 4.  Run migrations:
+     ```bash
+     make db-up
+     ```
+ 5.  Run the server:
+     ```bash
+     make run
+     ```
+ 
+ #### 2. Frontend
+ 1.  Navigate to `frontend/`.
+ 2.  Install & Start:
+     ```bash
+     npm install && npm start
+     ```
+ 
+ ## Database Migrations
+ 
+ We use `goose` for schema management. Check the `Makefile` for useful commands:
+ *   `make db-status`: Check migration status.
+ *   `make db-up`: Apply pending migrations.
+ *   `make db-down`: Rollback the last migration.
+ *   `make db-create`: Create a new SQL migration file.
 
 ## Project Structure
 
