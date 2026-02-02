@@ -1,13 +1,14 @@
 package utils
 
 import (
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 )
 
-func GetClientInfo(r *http.Request) (ip net.IP, ua string) {
-	ua = r.UserAgent()
+func GetClientInfo(r *http.Request) (netIP interface{ String() string }, userAgent string) {
+	userAgent = r.UserAgent()
 
 	host := r.Header.Get("CF-Connecting-IP")
 	if host == "" {
@@ -26,12 +27,16 @@ func GetClientInfo(r *http.Request) (ip net.IP, ua string) {
 
 	if parsed := net.ParseIP(host); parsed != nil {
 		if ip4 := parsed.To4(); ip4 != nil {
-			return ip4, ua
+			return ip4, userAgent
 		}
 		if parsed.IsLoopback() {
-			return net.ParseIP("127.0.0.1"), ua
+			return net.ParseIP("127.0.0.1"), userAgent
 		}
-		return parsed, ua
+		return parsed, userAgent
 	}
-	return nil, ua
+	return nil, userAgent
+}
+
+func LogRequest(r *http.Request) {
+	slog.Info("Request", "method", r.Method, "path", r.URL.Path, "remote_addr", r.RemoteAddr)
 }

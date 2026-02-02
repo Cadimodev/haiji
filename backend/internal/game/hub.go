@@ -2,7 +2,7 @@ package game
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"strings"
 	"sync"
 
@@ -10,8 +10,7 @@ import (
 )
 
 type Hub struct {
-	// Registered clients (connected, but maybe not in a room yet, or implicitly in a lobby?)
-	// Registered clients (connected, but maybe not in a room yet, or implicitly in a lobby?)
+	// Registered clients
 	clients map[*Client]bool
 
 	// Mutex for rooms map
@@ -45,7 +44,6 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			// Optionally send a welcome message or lobby state
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
@@ -68,18 +66,14 @@ func (h *Hub) Run() {
 }
 
 func (h *Hub) handleMessage(c *Client, msg []byte) {
-	// Basic Parsing to route message
-	// If command is Create/Join, Hub handles it.
-	// If command is Game related, pass to Room.
-
 	var base struct {
 		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(msg, &base); err != nil {
-		log.Println("Invalid JSON:", err)
+		slog.Warn("Invalid JSON message received", "error", err, "user", c.Username)
 		return
 	}
-	log.Printf("Hub received message type: %s from user %s", base.Type, c.Username)
+	slog.Debug("Hub received message", "type", base.Type, "user", c.Username)
 
 	switch base.Type {
 	case "CREATE_ROOM":
@@ -95,7 +89,6 @@ func (h *Hub) handleMessage(c *Client, msg []byte) {
 }
 
 func (h *Hub) CreateRoom(duration int, groups []string, hostID uuid.UUID) string {
-	// Generate simple 6-char code
 	code := uuid.New().String()[:6]
 	code = strings.ToUpper(code)
 	room := NewRoom(code, h, duration, groups, hostID)
@@ -117,19 +110,14 @@ func (h *Hub) handleCreateRoom(c *Client, msg []byte) {
 
 	code := h.CreateRoom(payload.Duration, payload.Groups, c.UserID)
 
-	// We need to notify the client of the code, or just join them?
-	// In WS-only flow, we'd Autojoin.
-	// But since we are moving to HTTP creation, this WS method might become redundant
-	// or just an alternative. We keep it for now but relay the join.
-	// or just an alternative. We keep it for now but relay the join.
 	h.mu.RLock()
 	r, ok := h.rooms[code]
 	h.mu.RUnlock()
 	if ok {
-		log.Printf("Auto-joining creator %s to room %s", c.Username, code)
+		slog.Info("Auto-joining creator to room", "user", c.Username, "room", code)
 		r.register <- c
 	} else {
-		log.Printf("Room %s created but not found for auto-join", code)
+		slog.Warn("Room created but not found for auto-join", "room", code)
 	}
 }
 
@@ -146,8 +134,7 @@ func (h *Hub) handleJoinRoom(c *Client, msg []byte) {
 	h.mu.RUnlock()
 
 	if !ok {
-		log.Printf("Room %s not found for join request from %s", payload.Code, c.Username)
-		// Send error?
+		slog.Info("Room not found for join request", "room", payload.Code, "user", c.Username)
 		c.Send <- []byte(`{"type":"ERROR", "message":"Room not found"}`)
 		return
 	}
@@ -157,7 +144,7 @@ func (h *Hub) handleJoinRoom(c *Client, msg []byte) {
 		return
 	}
 
-	log.Printf("Joining client %s to room %s", c.Username, payload.Code)
+	slog.Info("Joining client to room", "user", c.Username, "room", payload.Code)
 	room.register <- c
 }
 

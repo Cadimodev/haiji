@@ -2,7 +2,7 @@ package game
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -75,11 +75,10 @@ func (r *Room) Run() {
 	defer func() {
 		// Cleanup when room dies
 		r.Hub.closeRoom(r.Code)
-		log.Printf("Room %s loop terminated and closed", r.Code)
+		slog.Info("Room loop terminated and closed", "room", r.Code)
 	}()
 
 	// Grace period: allow room to stay alive for 30 seconds if empty
-	// (e.g. waiting for host to join, or during page refresh)
 	shutdownTimer := time.NewTimer(30 * time.Second)
 
 	for {
@@ -94,8 +93,8 @@ func (r *Room) Run() {
 			}
 
 			r.Clients[client] = true
-			log.Printf("Room %s registered client %s. Total clients: %d", r.Code, client.Username, len(r.Clients))
-			// Add to players list if not exists (reconnection logci could be here)
+			slog.Info("Room registered client", "room", r.Code, "user", client.Username, "total_clients", len(r.Clients))
+			// Add to players list
 			if _, exists := r.Players[client.UserID]; !exists {
 				r.Players[client.UserID] = &Player{
 					UserID:   client.UserID,
@@ -120,7 +119,7 @@ func (r *Room) Run() {
 
 				// If empty, reset timer to wait for reconnection
 				if len(r.Clients) == 0 {
-					log.Printf("Room %s is empty. Waiting 30s grace period...", r.Code)
+					slog.Info("Room is empty. Waiting grace period...", "room", r.Code)
 					shutdownTimer.Reset(30 * time.Second)
 				}
 			}
@@ -133,7 +132,7 @@ func (r *Room) Run() {
 				continue
 			}
 			r.State = StateFinished
-			log.Printf("Game in room %s finished. Broadcasting results.", r.Code)
+			slog.Info("Game finished. Broadcasting results.", "room", r.Code)
 			msg := map[string]interface{}{
 				"type":    "GAME_OVER",
 				"players": r.Players,
@@ -144,7 +143,7 @@ func (r *Room) Run() {
 			}
 
 		case <-shutdownTimer.C:
-			log.Printf("Room %s grace period expired. Shutting down.", r.Code)
+			slog.Info("Room grace period expired. Shutting down.", "room", r.Code)
 			return
 
 		case <-r.stopGame:
@@ -240,7 +239,7 @@ func (r *Room) handleRoomMessage(client *Client, msg []byte) {
 			if r.State == StatePlaying {
 				// Sanity Check: Prevent negative or unrealistic scores
 				if payload.Score < 0 || payload.Score > 9999 {
-					log.Printf("Potential hack attempt in room %s: User %s submitted invalid score %d", r.Code, client.UserID, payload.Score)
+					slog.Warn("Potential hack attempt: invalid score", "room", r.Code, "user", client.UserID, "score", payload.Score)
 					return
 				}
 
@@ -255,12 +254,12 @@ func (r *Room) handleRoomMessage(client *Client, msg []byte) {
 	select {
 	case r.action <- action:
 	case <-time.After(100 * time.Millisecond):
-		log.Println("Timeout sending action to room loop")
+		slog.Warn("Timeout sending action to room loop")
 	}
 }
 
 func (r *Room) broadcastRoomState() {
-	log.Printf("Broadcasting ROOM_STATE for room %s to %d clients", r.Code, len(r.Clients))
+	slog.Debug("Broadcasting ROOM_STATE", "room", r.Code, "clients", len(r.Clients))
 	msg := map[string]interface{}{
 		"type":    "ROOM_STATE",
 		"state":   r.State,
@@ -273,7 +272,7 @@ func (r *Room) broadcastRoomState() {
 	}
 	data, err := json.Marshal(msg)
 	if err != nil {
-		log.Println("Error marshalling room state:", err)
+		slog.Error("Error marshalling room state", "error", err)
 		return
 	}
 	r.broadcastToClients(data)
@@ -286,7 +285,7 @@ func (r *Room) broadcastScores() {
 	}
 	data, err := json.Marshal(msg)
 	if err != nil {
-		log.Println("Error marshalling scores:", err)
+		slog.Error("Error marshalling scores", "error", err)
 		return
 	}
 	r.broadcastToClients(data)

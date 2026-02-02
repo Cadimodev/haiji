@@ -2,16 +2,15 @@ package utils
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
 func RespondWithErrorJSON(w http.ResponseWriter, code int, msg string, err error) {
 	if err != nil {
-		log.Println(err)
-	}
-	if code > 499 {
-		log.Printf("Responding with 5XX error: %s", msg)
+		slog.Error("Responding with error", "code", code, "message", msg, "error", err)
+	} else if code > 499 {
+		slog.Error("Responding with 5XX error", "code", code, "message", msg)
 	}
 	type errorResponse struct {
 		Error string `json:"error"`
@@ -25,7 +24,7 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	dat, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("Error marshalling JSON: %s", err)
+		slog.Error("Error marshalling JSON", "error", err)
 		w.WriteHeader(500)
 		return
 	}

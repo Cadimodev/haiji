@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,9 +30,22 @@ func main() {
 		log.Fatalf("Error loading config: %s", err)
 	}
 
+	// Initialize Logger
+	var logger *slog.Logger
+	if apiCFG.Platform == "dev" {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	} else {
+		// Production: structured logging (JSON)
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	}
+	slog.SetDefault(logger)
+
+	slog.Info("Starting haiji server...", "port", apiCFG.Port, "env", apiCFG.Platform)
+
 	dbConn, err := sql.Open("postgres", apiCFG.DBURL)
 	if err != nil {
-		log.Fatalf("Error opening database: %s", err)
+		slog.Error("Error opening database", "error", err)
+		os.Exit(1)
 	}
 
 	// Initialize dependencies
@@ -50,15 +64,20 @@ func main() {
 	mux := router.New(apiCFG, userHandler, authHandler, gameHandler, systemHandler)
 
 	srv := &http.Server{
-		Addr:    ":" + apiCFG.Port,
-		Handler: mux,
+		Addr:              ":" + apiCFG.Port,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	// Run server in a goroutine
 	go func() {
-		log.Printf("haiji server running on port: %s\n", apiCFG.Port)
+		slog.Info("Server listening", "addr", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			slog.Error("Listen failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -66,7 +85,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	slog.Info("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling
@@ -74,8 +93,9 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
+		slog.Error("Server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server exiting")
+	slog.Info("Server exiting")
 }
