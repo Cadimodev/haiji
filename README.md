@@ -55,7 +55,7 @@ The easiest way to run the project is using Docker Compose.
  ```bash
  make docker-up
  ```
- This will start the database service, migrate the schema automatically, and launch both backend and ntend.
+ This will start the database service, migrate the schema automatically, and launch both backend and frontend.
  
  ### Option 2: Manual Setup (Local Development)
  
