@@ -129,6 +129,9 @@ haiji/
 *   **Structured Logging**: JSON logging in production for better observability and security auditing.
 *   **Password Hashing**: Industry-standard Argon2id hashing for user passwords.
 
+## Motivation
+## Usage
+## Contributing
 ## Screenshots
 | | |
 |:---:|:---:|
