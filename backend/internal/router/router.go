@@ -21,7 +21,6 @@ func New(
 ) http.Handler {
 
 	// Rate limiters
-	// Rate limiters
 	loginLimiter := middleware.NewRateLimiter(5, time.Minute)
 	registerLimiter := middleware.NewRateLimiter(5, time.Minute)
 	refreshLimiter := middleware.NewRateLimiter(60, time.Minute)

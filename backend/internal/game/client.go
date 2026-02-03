@@ -51,12 +51,9 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		// TODO: Handle incoming method (Create/Join/submit)
-		// For now we just echo or ignore, generic message handling will be in Hub or Room
+
 		log.Printf("Reived message from %s: %s", c.Username, message)
 
-		// Pass message to Hub or Room logic?
-		// We will likely parse JSON here and route it.
 		c.Hub.handleMessage(c, message)
 	}
 }
