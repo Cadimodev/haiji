@@ -48,7 +48,7 @@ The project is built with a clear separation of concerns, featuring a robust Go 
     *   Node.js 18+ (Frontend)
     *   PostgreSQL 15 (Database)
 
-## Getting Started
+## Quick Start
 
 The easiest way to run the project is using Docker Compose.
 
